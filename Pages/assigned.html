@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedMitra - Assigned Reminders</title>
+    <script src="../Scripts/auth-guard.js"></script>
+    <link rel="stylesheet" href="../Styles/medmitra.css">
+</head>
+<body>
+    <header>
+        <a href="/index.html" class="back-link">&larr;</a>
+        <h1>MedMitra</h1>
+    </header>
+    <nav class="medmitra-nav">
+        <a href="/medmitra/registration.html">Registration</a>
+        <a href="/medmitra/assigned.html" class="active">Assigned</a>
+        <a href="/medmitra/reminders.html">Reminders</a>
+        <a href="/medmitra/statistics.html">Statistics</a>
+        <a href="/medmitra/inactive.html">Inactive</a>
+        <a href="/medmitra/alerts.html">Alerts</a>
+    </nav>
+    <div class="container">
+        <h2>Today's Scheduled Reminders</h2>
+        <p>List of all patient reminders scheduled for today.</p>
+        
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search by Patient Name or OPD No..." onkeyup="filterTable()">
+        </div>
+
+        <table id="scheduleTable">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Patient Name</th>
+                    <th>OPD No</th>
+                    <th>Drug</th>
+                    <th>Dose</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="6" style="text-align: center;">Loading schedule...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let scheduleData = [];
+
+        async function fetchSchedule() {
+            try {
+                const response = await fetch('/api/medmitra/assigned-reminders');
+                scheduleData = await response.json();
+                renderTable(scheduleData);
+            } catch (error) {
+                console.error('Error fetching schedule:', error);
+                document.querySelector('#scheduleTable tbody').innerHTML = '<tr><td colspan="6" style="text-align:center; color: red;">Failed to load schedule.</td></tr>';
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.querySelector('#scheduleTable tbody');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No scheduled reminders for today.</td></tr>';
+                return;
+            }
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                const badgeClass = item.status === 'Upcoming' ? 'badge-upcoming' : 'badge-past';
+                
+                tr.innerHTML = `
+                    <td><strong>${item.time}</strong></td>
+                    <td>${item.patient_name}</td>
+                    <td>${item.opd_no}</td>
+                    <td>${item.drug_name}</td>
+                    <td>${item.dose}</td>
+                    <td><span class="badge ${badgeClass}">${item.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTable() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = scheduleData.filter(item => 
+                item.patient_name.toLowerCase().includes(term) || 
+                item.opd_no.toLowerCase().includes(term)
+            );
+            renderTable(filtered);
+        }
+
+        // Fetch on load
+        fetchSchedule();
+        
+        // Auto-refresh every 60 seconds
+        setInterval(fetchSchedule, 60000);
+    </script>
+</body>
+</html>

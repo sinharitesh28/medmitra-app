@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedMitra - Inactive Patients</title>
+    <script src="../Scripts/auth-guard.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; }
+        header { background-color: #007bff; color: white; padding: 1rem; display: flex; align-items: center; padding-left: 2rem; }
+        .back-link { color: white; text-decoration: none; font-weight: bold; margin-right: 1rem; font-size: 1.2rem; }
+        h1 { margin: 0; font-size: 1.5rem; }
+        .container { max-width: 1000px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .medmitra-nav { background-color: #e9ecef; padding: 0.5rem 2rem; border-bottom: 1px solid #dee2e6; display: flex; gap: 1rem; }
+        .medmitra-nav a { text-decoration: none; color: #495057; padding: 0.5rem 1rem; border-radius: 4px; font-weight: 500; }
+        .medmitra-nav a:hover { background-color: #dee2e6; color: #007bff; }
+        .medmitra-nav a.active { background-color: #007bff; color: white; }
+
+        /* Search Bar */
+        .search-bar { margin-bottom: 1.5rem; display: flex; gap: 1rem; }
+        .search-bar input { flex: 1; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+
+        /* Table Styles */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { border: 1px solid #eee; padding: 1rem; text-align: left; }
+        th { background-color: #f8f9fa; font-weight: 600; color: #333; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+        tr:hover { background-color: #f1f1f1; }
+
+        .badge-warning { background-color: #fff3cd; color: #856404; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
+        .text-muted { color: #6c757d; font-style: italic; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/index.html" class="back-link">&larr;</a>
+        <h1>MedMitra</h1>
+    </header>
+    <nav class="medmitra-nav">
+        <a href="/medmitra/registration.html">Registration</a>
+        <a href="/medmitra/assigned.html">Assigned</a>
+        <a href="/medmitra/reminders.html">Reminders</a>
+        <a href="/medmitra/statistics.html">Statistics</a>
+        <a href="/medmitra/inactive.html" class="active">Inactive</a>
+        <a href="/medmitra/alerts.html">Alerts</a>
+    </nav>
+    <div class="container">
+        <h2>Inactive Patients</h2>
+        <p>Patients unresponsive for >24 hours with 3+ missed dosages.</p>
+        
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search by Patient Name or OPD No..." onkeyup="filterTable()">
+        </div>
+
+        <table id="inactiveTable">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>OPD No</th>
+                    <th>Contact</th>
+                    <th>Missed Dosages</th>
+                    <th>Last Active</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="5" style="text-align: center;">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let inactivePatients = [];
+
+        async function fetchInactivePatients() {
+            try {
+                const response = await fetch('/api/medmitra/inactive-patients');
+                inactivePatients = await response.json();
+                renderTable(inactivePatients);
+            } catch (error) {
+                console.error('Error fetching inactive patients:', error);
+                document.querySelector('#inactiveTable tbody').innerHTML = '<tr><td colspan="5" style="text-align:center; color: red;">Failed to load data.</td></tr>';
+            }
+        }
+
+        function renderTable(patients) {
+            const tbody = document.querySelector('#inactiveTable tbody');
+            tbody.innerHTML = '';
+
+            if (patients.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No inactive patients found.</td></tr>';
+                return;
+            }
+
+            patients.forEach(p => {
+                const tr = document.createElement('tr');
+                const lastActive = p.last_interaction ? new Date(p.last_interaction).toLocaleString() : '<span class="text-muted">Never</span>';
+                
+                tr.innerHTML = `
+                    <td>${p.patient_name}</td>
+                    <td>${p.opd_no}</td>
+                    <td>${p.contact_number || '-'}</td>
+                    <td><span class="badge-warning">${p.missed_count} Missed</span></td>
+                    <td>${lastActive}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTable() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = inactivePatients.filter(p => 
+                p.patient_name.toLowerCase().includes(term) || 
+                p.opd_no.toLowerCase().includes(term)
+            );
+            renderTable(filtered);
+        }
+
+        // Fetch on load
+        fetchInactivePatients();
+    </script>
+</body>
+</html>

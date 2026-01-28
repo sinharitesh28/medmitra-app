@@ -1,0 +1,37 @@
+[
+  {
+    "drug_name": "Metformin HCl",
+    "brand_name": "Glycomet",
+    "rxcui": "6809",
+    "available_doses": ["500mg", "850mg", "1000mg"],
+    "type": "Formulary"
+  },
+  {
+    "drug_name": "Paracetamol",
+    "brand_name": "Dolo",
+    "rxcui": "161",
+    "available_doses": ["500mg", "650mg"],
+    "type": "Formulary"
+  },
+  {
+    "drug_name": "Amoxicillin",
+    "brand_name": "Mox",
+    "rxcui": "703",
+    "available_doses": ["250mg", "500mg"],
+    "type": "Formulary"
+  },
+  {
+    "drug_name": "Atorvastatin",
+    "brand_name": "Atorva",
+    "rxcui": "83367",
+    "available_doses": ["10mg", "20mg", "40mg", "80mg"],
+    "type": "Formulary"
+  },
+  {
+    "drug_name": "Pantoprazole",
+    "brand_name": "Pan",
+    "rxcui": "40790",
+    "available_doses": ["20mg", "40mg"],
+    "type": "Formulary"
+  }
+]

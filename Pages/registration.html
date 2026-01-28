@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedMitra - Registration</title>
+    <script src="../Scripts/auth-guard.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="../Styles/medmitra.css">
+    <style>
+        .suggestions-list { position: absolute; background: white; border: 1px solid #ddd; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; list-style: none; padding: 0; margin: 0; display: none; }
+        .suggestions-list li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .suggestions-list li:hover { background-color: #f8f9fa; }
+        .badge-formulary { background-color: #d4edda; color: #155724; padding: 2px 6px; font-size: 0.7rem; border-radius: 4px; float: right; }
+        .badge-global { background-color: #e2e3e5; color: #383d41; padding: 2px 6px; font-size: 0.7rem; border-radius: 4px; float: right; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/index.html" class="back-link">&larr;</a>
+        <h1>MedMitra</h1>
+    </header>
+    <nav class="medmitra-nav">
+        <a href="/medmitra/registration.html" class="active">Registration</a>
+        <a href="/medmitra/assigned.html">Assigned</a>
+        <a href="/medmitra/reminders.html">Reminders</a>
+        <a href="/medmitra/statistics.html">Statistics</a>
+        <a href="/medmitra/inactive.html">Inactive</a>
+        <a href="/medmitra/alerts.html">Alerts</a>
+    </nav>
+    <div class="container">
+        <h2>New Patient Registration</h2>
+        <form id="medMitraForm">
+            <div style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
+                    <label for="opdNo">OPD No</label>
+                    <input type="text" id="opdNo" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="patientName">Patient Name</label>
+                    <input type="text" id="patientName" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="contactNumber">Patient Contact Number</label>
+                <input type="text" id="contactNumber" placeholder="+91..." required>
+            </div>
+            <div class="form-group">
+                <label for="diagnosis">Diagnosis</label>
+                <textarea id="diagnosis" rows="2"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="language">Preferred Language for Reminders</label>
+                <select id="language">
+                    <option value="en">English (Default)</option>
+                    <option value="hi">Hindi (हिन्दी)</option>
+                    <option value="gu">Gujarati (ગુજરાતી)</option>
+                    <option value="bn">Bengali (বাংলা)</option>
+                    <option value="mr">Marathi (मराठी)</option>
+                    <option value="ta">Tamil (தமிழ்)</option>
+                    <option value="te">Telugu (తెలుగు)</option>
+                    <option value="kn">Kannada (ಕನ್ನಡ)</option>
+                    <option value="ml">Malayalam (മലയാളം)</option>
+                    <option value="pa">Punjabi (ਪੰਜਾਬੀ)</option>
+                    <option value="or">Odia (ଓଡ଼ିଆ)</option>
+                    <option value="as">Assamese (অসমীয়া)</option>
+                    <option value="ur">Urdu (اردو)</option>
+                    <option value="sa">Sanskrit (संस्कृतम्)</option>
+                    <option value="ne">Nepali (नेपाली)</option>
+                    <option value="sd">Sindhi (सिन्धी)</option>
+                    <option value="kok">Konkani (कोंकणी)</option>
+                    <option value="mni">Manipuri (মণিপুরী)</option>
+                    <option value="doi">Dogri (डोगरी)</option>
+                    <option value="brx">Bodo (बड़ो)</option>
+                    <option value="mai">Maithili (मैथिली)</option>
+                    <option value="sat">Santali (संताली)</option>
+                    <option value="ks">Kashmiri (कश्मीरी)</option>
+                </select>
+            </div>
+            
+            <h3>Therapy Regimen</h3>
+            <table id="therapyTable">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Drug Name (RxNorm)</th>
+                        <th style="width: 20%;">Dose</th>
+                        <th>Schedule Times (comma sep)</th>
+                        <th>End Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will be added here -->
+                </tbody>
+            </table>
+            <button type="button" class="add-btn" onclick="addTherapyRow()">+ Add Drug</button>
+
+            <br><br>
+            <button type="submit" style="width: 100%;">Generate QR & Register</button>
+        </form>
+        <div id="message" class="message"></div>
+
+        <div id="qr-container">
+            <h3>Scan to Activate</h3>
+            <p class="qr-instructions">Ask the patient to scan this QR code with their phone camera or Telegram app and click <strong>"Start"</strong>.</p>
+            
+            <div id="qrcode"></div>
+            <p id="status-text" style="color: var(--primary-color); font-weight: bold;">Waiting for patient consent...</p>
+        </div>
+    </div>
+
+    <script>
+        let botUsername = '';
+        let pollingInterval = null;
+        let currentOpdNo = null;
+        let rowCount = 0;
+
+        // Fetch Bot Info on Load (with retry)
+        const fetchBotInfo = (retries = 5) => {
+            fetch('/api/medmitra/bot-info')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.username) {
+                        botUsername = data.username;
+                        console.log('Bot username loaded:', botUsername);
+                    } else if (retries > 0) {
+                        console.log('Bot username not ready, retrying...', retries);
+                        setTimeout(() => fetchBotInfo(retries - 1), 2000);
+                    } else {
+                        console.warn('Bot username could not be loaded.');
+                    }
+                })
+                .catch(err => console.error('Failed to get bot info', err));
+        };
+        
+        fetchBotInfo();
+
+        function addTherapyRow() {
+            const table = document.getElementById('therapyTable').getElementsByTagName('tbody')[0];
+            const row = table.insertRow();
+            const id = rowCount++;
+            
+            row.innerHTML = `
+                <td style="position: relative;">
+                    <input type="text" placeholder="Type generic/brand..." onkeyup="searchDrug(this, ${id})" autocomplete="off" required>
+                    <ul id="suggestions-${id}" class="suggestions-list"></ul>
+                    <input type="hidden" class="rxcui-hidden"> 
+                </td>
+                <td>
+                    <input list="doses-${id}" type="text" placeholder="Select or type..." required>
+                    <datalist id="doses-${id}"></datalist>
+                </td>
+                <td><input type="text" placeholder="09:00, 21:00" required></td>
+                <td><input type="date" required></td>
+                <td><button type="button" class="action-btn" onclick="this.closest('tr').remove()">Remove</button></td>
+            `;
+        }
+
+        // Smart Drug Search Logic
+        let searchTimeout = null;
+        async function searchDrug(input, id) {
+            const term = input.value;
+            const list = document.getElementById(`suggestions-${id}`);
+            
+            if (term.length < 2) {
+                list.style.display = 'none';
+                return;
+            }
+
+            // Debounce
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    // 1. Local Formulary
+                    const localRes = await fetch(`/api/medmitra/rxnorm/formulary?q=${encodeURIComponent(term)}`);
+                    const localData = await localRes.json();
+
+                    // 2. Global RxNorm (only if needed or always?)
+                    // Let's do parallel for speed
+                    const globalRes = await fetch(`/api/medmitra/rxnorm/search?q=${encodeURIComponent(term)}`);
+                    const globalData = await globalRes.json();
+
+                    // Merge: Local first
+                    const results = [
+                        ...localData.map(d => ({ ...d, source: 'Formulary' })),
+                        ...globalData.filter(g => !localData.some(l => l.rxcui === g.rxcui)).map(d => ({ ...d, source: 'Global' }))
+                    ].slice(0, 10);
+
+                    if (results.length > 0) {
+                        list.innerHTML = results.map(d => `
+                            <li onclick="selectDrug(this, ${id}, '${d.drug_name}', '${d.rxcui}', '${d.brand_name || ''}')">
+                                ${d.drug_name} ${d.brand_name ? `(${d.brand_name})` : ''}
+                                <span class="${d.source === 'Formulary' ? 'badge-formulary' : 'badge-global'}">${d.source}</span>
+                            </li>
+                        `).join('');
+                        list.style.display = 'block';
+                    } else {
+                        list.style.display = 'none';
+                    }
+                } catch (e) {
+                    console.error('Search error', e);
+                }
+            }, 300);
+        }
+
+        async function selectDrug(li, id, name, rxcui, brand) {
+            const row = li.closest('td');
+            const input = row.querySelector('input[type="text"]');
+            const hidden = row.querySelector('.rxcui-hidden');
+            const list = row.querySelector('ul');
+            const doseList = document.getElementById(`doses-${id}`);
+
+            input.value = name + (brand ? ` (${brand})` : '');
+            hidden.value = rxcui;
+            list.style.display = 'none';
+
+            // Fetch Doses
+            try {
+                const res = await fetch(`/api/medmitra/rxnorm/details/${rxcui}`);
+                const data = await res.json();
+                if (data.available_doses && data.available_doses.length > 0) {
+                    doseList.innerHTML = data.available_doses.map(d => `<option value="${d}">`).join('');
+                } else {
+                    doseList.innerHTML = ''; // Clear if none found
+                }
+            } catch (e) { console.error('Dose fetch error', e); }
+        }
+
+        // Close lists on click outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('td')) {
+                document.querySelectorAll('.suggestions-list').forEach(l => l.style.display = 'none');
+            }
+        });
+
+        // Add one initial row
+        addTherapyRow();
+
+        document.getElementById('medMitraForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageDiv = document.getElementById('message');
+            const qrContainer = document.getElementById('qr-container');
+            const qrCodeDiv = document.getElementById('qrcode');
+            const statusText = document.getElementById('status-text');
+            
+            messageDiv.style.display = 'none';
+            qrContainer.style.display = 'none';
+            qrCodeDiv.innerHTML = '';
+            if (pollingInterval) clearInterval(pollingInterval);
+
+            const opdNo = document.getElementById('opdNo').value;
+            currentOpdNo = opdNo; // Store for simulation
+            
+            // Gather Therapy Data
+            const therapies = [];
+            const rows = document.getElementById('therapyTable').getElementsByTagName('tbody')[0].rows;
+            for (let i = 0; i < rows.length; i++) {
+                const inputs = rows[i].getElementsByTagName('input');
+                // Input Map: 0=Name, 1=RxCUI(Hidden), 2=Dose, 3=Times, 4=Date
+                therapies.push({
+                    drug: inputs[0].value,
+                    dose: inputs[2].value, 
+                    scheduleTimes: inputs[3].value.split(',').map(t => t.trim()),
+                    endDate: inputs[4].value
+                });
+            }
+
+            const data = {
+                status: 'Outpatient', // Explicitly set status for OPD
+                opdNo: opdNo,
+                patientName: document.getElementById('patientName').value,
+                contactNumber: document.getElementById('contactNumber').value,
+                diagnosis: document.getElementById('diagnosis').value,
+                language: document.getElementById('language').value,
+                therapies: therapies
+            };
+
+            try {
+                // 1. Register Patient & Therapies
+                const response = await fetch('/api/medmitra/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    // 2. Generate QR Code
+                    if (botUsername) {
+                        qrContainer.style.display = 'block';
+                        const telegramLink = `https://t.me/${botUsername}?start=${opdNo}`;
+                        new QRCode(qrCodeDiv, {
+                            text: telegramLink,
+                            width: 128,
+                            height: 128
+                        });
+
+                        // 3. Start Polling
+                        statusText.textContent = "Waiting for patient consent...";
+                        statusText.style.color = "var(--primary-color)";
+                        
+                        pollingInterval = setInterval(async () => {
+                            try {
+                                const checkRes = await fetch(`/api/medmitra/check-consent/${encodeURIComponent(opdNo)}`);
+                                if (!checkRes.ok) throw new Error(`Server returned ${checkRes.status}`);
+                                const checkData = await checkRes.json();
+                                
+                                if (checkData.consent) {
+                                    clearInterval(pollingInterval);
+                                    statusText.textContent = "✅ Consent Verified! Reminders Active.";
+                                    statusText.style.color = "var(--success-color)";
+                                    document.getElementById('medMitraForm').reset();
+                                    setTimeout(() => {
+                                        qrContainer.style.display = 'none';
+                                    }, 5000);
+                                }
+                            } catch (pollErr) {
+                                console.error('Polling error', pollErr);
+                            }
+                        }, 3000);
+                    } else {
+                        messageDiv.textContent = 'Error: Bot username not loaded.';
+                        messageDiv.className = 'message error';
+                        messageDiv.style.display = 'block';
+                    }
+
+                } else {
+                    messageDiv.textContent = result.error || 'Registration failed.';
+                    messageDiv.className = 'message error';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                messageDiv.textContent = 'Network error.';
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

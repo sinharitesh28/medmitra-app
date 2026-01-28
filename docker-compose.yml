@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: medmitra_app
+    restart: always
+    ports:
+      - "3002:3000"
+    environment:
+      - PORT=3000
+      - DB_HOST=db
+      - DB_USER=medmitra_user
+      - DB_PASSWORD=medmitra_pass
+      - DB_NAME=clinipraxis
+      # Add other environment variables here as needed, e.g.
+      # ICD_CLIENT_ID=...
+      # ICD_CLIENT_SECRET=...
+      - TELEGRAM_BOT_TOKEN=8515103978:AAHKfMXwQfF16ioIFAG17g3ydVQHfpFaI4Y
+      - TZ=Asia/Kolkata
+      # Authentication
+      - EMAIL_USER=ritesh.sinha37738@paruluniversity.ac.in
+      - EMAIL_PASS=qosq wzvk eeep lzyl
+      - JWT_SECRET=medmitra_super_secret_key_2026
+    depends_on:
+      - db
+    networks:
+      - medmitra_network
+
+  db:
+    image: mysql:8.0
+    container_name: medmitra_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: clinipraxis
+      MYSQL_USER: medmitra_user
+      MYSQL_PASSWORD: medmitra_pass
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - medmitra_network
+    # Optional: Expose DB port to host for local debugging tools
+    ports:
+      - "3308:3306"
+
+networks:
+  medmitra_network:
+    driver: bridge
+
+volumes:
+  db_data:

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedMitra - Statistics</title>
+    <script src="../Scripts/auth-guard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; }
+        header { background-color: #007bff; color: white; padding: 1rem; display: flex; align-items: center; padding-left: 2rem; }
+        .back-link { color: white; text-decoration: none; font-weight: bold; margin-right: 1rem; font-size: 1.2rem; }
+        h1 { margin: 0; font-size: 1.5rem; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+        
+        .medmitra-nav { background-color: #e9ecef; padding: 0.5rem 2rem; border-bottom: 1px solid #dee2e6; display: flex; gap: 1rem; }
+        .medmitra-nav a { text-decoration: none; color: #495057; padding: 0.5rem 1rem; border-radius: 4px; font-weight: 500; }
+        .medmitra-nav a:hover { background-color: #dee2e6; color: #007bff; }
+        .medmitra-nav a.active { background-color: #007bff; color: white; }
+
+        /* KPI Cards */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center; }
+        .card h3 { margin: 0; font-size: 2rem; color: #007bff; }
+        .card p { margin: 0.5rem 0 0; color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Charts Section */
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        .chart-container { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        /* Tables Section */
+        .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        .table-container { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .table-container h4 { margin-top: 0; color: #333; border-bottom: 2px solid #f4f4f9; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #eee; }
+        th { font-weight: 600; color: #555; }
+        .badge { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .badge-upcoming { background-color: #cce5ff; color: #004085; }
+        .badge-severe { background-color: #f8d7da; color: #721c24; }
+
+        @media (max-width: 768px) {
+            .charts-grid, .tables-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/index.html" class="back-link">&larr;</a>
+        <h1>MedMitra</h1>
+    </header>
+    <nav class="medmitra-nav">
+        <a href="/medmitra/registration.html">Registration</a>
+        <a href="/medmitra/assigned.html">Assigned</a>
+        <a href="/medmitra/reminders.html">Reminders</a>
+        <a href="/medmitra/statistics.html" class="active">Statistics</a>
+        <a href="/medmitra/inactive.html">Inactive</a>
+        <a href="/medmitra/alerts.html">Alerts</a>
+    </nav>
+
+    <div class="container">
+        <!-- KPIs -->
+        <div class="kpi-grid">
+            <div class="card">
+                <h3 id="totalPatients">-</h3>
+                <p>Total Patients</p>
+            </div>
+            <div class="card">
+                <h3 id="activePatients">-</h3>
+                <p>Active Consent</p>
+            </div>
+            <div class="card">
+                <h3 id="totalResponses">-</h3>
+                <p>Responses Logged</p>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="chart-container">
+                <canvas id="regChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="responseChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Tables -->
+        <div class="tables-grid">
+            <div class="table-container">
+                <h4>Recent Reactions</h4>
+                <table id="reactionTable">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Patient</th>
+                            <th>Alert</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="table-container">
+                <h4>Upcoming Reminders</h4>
+                <table id="upcomingTable">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Patient</th>
+                            <th>Drug</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchStats() {
+            try {
+                // 1. Fetch Main Stats
+                const statsRes = await fetch('/api/medmitra/stats');
+                const stats = await statsRes.json();
+
+                // Update KPIs
+                document.getElementById('totalPatients').textContent = stats.patients.total;
+                document.getElementById('activePatients').textContent = stats.patients.active;
+                
+                const totalLogs = stats.responses.reduce((acc, curr) => acc + curr.count, 0);
+                document.getElementById('totalResponses').textContent = totalLogs;
+
+                // Render Registrations Chart
+                const regCtx = document.getElementById('regChart').getContext('2d');
+                new Chart(regCtx, {
+                    type: 'line',
+                    data: {
+                        labels: stats.registrations.map(r => r.date),
+                        datasets: [{
+                            label: 'New Registrations (Last 7 Days)',
+                            data: stats.registrations.map(r => r.count),
+                            borderColor: '#007bff',
+                            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: { responsive: true, plugins: { legend: { position: 'top' } } }
+                });
+
+                // Render Response Distribution Chart
+                const respCtx = document.getElementById('responseChart').getContext('2d');
+                const respLabels = stats.responses.map(r => r.response || 'Pending');
+                const respData = stats.responses.map(r => r.count);
+                const respColors = respLabels.map(l => {
+                    if (l === 'TAKEN') return '#28a745'; // Green
+                    if (l === 'FORGOT') return '#ffc107'; // Yellow
+                    if (l === 'REACTION') return '#dc3545'; // Red
+                    return '#6c757d'; // Grey (Pending)
+                });
+
+                new Chart(respCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: respLabels,
+                        datasets: [{
+                            data: respData,
+                            backgroundColor: respColors
+                        }]
+                    },
+                    options: { responsive: true, plugins: { legend: { position: 'right' } } }
+                });
+
+                // Render Reactions Table
+                const reactionBody = document.querySelector('#reactionTable tbody');
+                if (stats.reactions.length === 0) {
+                    reactionBody.innerHTML = '<tr><td colspan="3" style="text-align:center">No recent reactions.</td></tr>';
+                } else {
+                    reactionBody.innerHTML = stats.reactions.map(r => `
+                        <tr>
+                            <td>${new Date(r.response_at).toLocaleDateString()}</td>
+                            <td>${r.patient_name}</td>
+                            <td><span class="badge badge-severe">Reaction</span></td>
+                        </tr>
+                    `).join('');
+                }
+
+                // 2. Fetch Upcoming Reminders (Reuse existing API)
+                const schedRes = await fetch('/api/medmitra/assigned-reminders');
+                const schedule = await schedRes.json();
+                
+                // Filter for 'Upcoming' and take top 5
+                const upcoming = schedule.filter(s => s.status === 'Upcoming').slice(0, 5);
+                const upcomingBody = document.querySelector('#upcomingTable tbody');
+                
+                if (upcoming.length === 0) {
+                    upcomingBody.innerHTML = '<tr><td colspan="3" style="text-align:center">No upcoming reminders today.</td></tr>';
+                } else {
+                    upcomingBody.innerHTML = upcoming.map(u => `
+                        <tr>
+                            <td>${u.time}</td>
+                            <td>${u.patient_name}</td>
+                            <td>${u.drug_name}</td>
+                        </tr>
+                    `).join('');
+                }
+
+            } catch (err) {
+                console.error('Error loading stats:', err);
+            }
+        }
+
+        fetchStats();
+    </script>
+</body>
+</html>

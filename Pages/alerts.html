@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedMitra - Reaction Alerts</title>
+    <script src="../Scripts/auth-guard.js"></script>
+    <link rel="stylesheet" href="../Styles/medmitra.css">
+</head>
+<body>
+    <header>
+        <a href="/index.html" class="back-link">&larr;</a>
+        <h1>MedMitra</h1>
+    </header>
+    <nav class="medmitra-nav">
+        <a href="/medmitra/registration.html">Registration</a>
+        <a href="/medmitra/assigned.html">Assigned</a>
+        <a href="/medmitra/reminders.html">Reminders</a>
+        <a href="/medmitra/statistics.html">Statistics</a>
+        <a href="/medmitra/inactive.html">Inactive</a>
+        <a href="/medmitra/alerts.html" class="active">Alerts</a>
+    </nav>
+    <div class="container">
+        <h2>Adverse Reaction Alerts</h2>
+        <p>Patients who have reported reactions to their medication.</p>
+        
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search by Patient Name or OPD No..." onkeyup="filterTable()">
+        </div>
+
+        <table id="alertsTable">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Patient Name</th>
+                    <th>OPD No</th>
+                    <th>Contact</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="5" style="text-align: center;">Loading alerts...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let alerts = [];
+
+        async function fetchAlerts() {
+            try {
+                const response = await fetch('/api/medmitra/reaction-alerts');
+                alerts = await response.json();
+                renderTable(alerts);
+            } catch (error) {
+                console.error('Error fetching alerts:', error);
+                document.querySelector('#alertsTable tbody').innerHTML = '<tr><td colspan="5" style="text-align:center; color: red;">Failed to load alerts.</td></tr>';
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.querySelector('#alertsTable tbody');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No reaction alerts found.</td></tr>';
+                return;
+            }
+
+            data.forEach(alert => {
+                const tr = document.createElement('tr');
+                tr.className = 'alert-row';
+                
+                const time = new Date(alert.response_at).toLocaleString();
+                
+                tr.innerHTML = `
+                    <td>${time}</td>
+                    <td>${alert.patient_name}</td>
+                    <td>${alert.opd_no}</td>
+                    <td>${alert.contact_number || '-'}</td>
+                    <td><span class="badge badge-severe">Reaction Reported</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTable() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = alerts.filter(alert => 
+                alert.patient_name.toLowerCase().includes(term) || 
+                alert.opd_no.toLowerCase().includes(term)
+            );
+            renderTable(filtered);
+        }
+
+        // Fetch on load
+        fetchAlerts();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(fetchAlerts, 30000);
+    </script>
+</body>
+</html>

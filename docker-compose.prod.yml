@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: medmitra_app
+    restart: always
+    ports:
+      - "80:3000" # Expose on standard HTTP
+    environment:
+      - PORT=3000
+      # External Database Configuration
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_SSL=true  # Enable SSL for cloud DBs
+      
+      # App Secrets
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - JWT_SECRET=${JWT_SECRET}
+      - TZ=Asia/Kolkata
+    # No "depends_on: db" because DB is external
+    deploy:
+      resources:
+        limits:
+          memory: 400M # Plenty for just Node.js
+
+# No "db" service
+# No volumes needed (DB holds data)
