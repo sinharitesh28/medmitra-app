@@ -25,7 +25,7 @@ const authGuard = (req, res, next) => {
 
     if (!token) {
         // If API request, return 401
-        if (req.path.startsWith('/api')) {
+        if (req.originalUrl.startsWith('/api')) {
             return res.status(401).json({ error: 'Unauthorized: No Token' });
         }
         // If Page request, redirect to login
@@ -38,7 +38,7 @@ const authGuard = (req, res, next) => {
         next();
     } catch (err) {
         console.error(`[AuthGuard] Token Verification Failed:`, err.message);
-        if (req.path.startsWith('/api')) {
+        if (req.originalUrl.startsWith('/api')) {
             return res.status(401).json({ error: 'Invalid Token' });
         }
         return res.redirect('/login.html');
