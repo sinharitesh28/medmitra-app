@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedMitra - Inactive Patients</title>
+    <script src="../Scripts/config.js"></script>
     <script src="../Scripts/auth-guard.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="../Scripts/config.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -42,26 +42,26 @@
                 </h1>
             </div>
             <nav class="flex-1 px-4 py-8 space-y-2 overflow-y-auto no-scrollbar">
-                <a href="/medmitra/registration.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                <a href="registration.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
                     <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📝</span><span class="font-medium tracking-wide">Registration</span>
                 </a>
-                <a href="/medmitra/assigned.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                <a href="assigned.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
                     <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📅</span><span class="font-medium tracking-wide">Assigned</span>
                 </a>
-                <a href="/medmitra/reminders.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                <a href="reminders.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
                     <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">🔔</span><span class="font-medium tracking-wide">Reminders</span>
                 </a>
-                <a href="/medmitra/statistics.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                <a href="statistics.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
                     <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📊</span><span class="font-medium tracking-wide">Statistics</span>
                 </a>
-                <a href="/medmitra/inactive.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                <a href="inactive.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
                     <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">⚠️</span><span class="font-medium tracking-wide">Inactive</span>
                 </a>
-                <a href="/medmitra/alerts.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                <a href="alerts.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
                     <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">🚨</span><span class="font-medium tracking-wide">Alerts</span>
                 </a>
                 <div class="my-4 border-t border-gray-800/50"></div>
-                <a href="/medmitra/admin_dashboard.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                <a href="admin_dashboard.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
                     <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">⚙️</span><span class="font-medium tracking-wide">Admin</span>
                 </a>
             </nav>
@@ -142,7 +142,7 @@
                 setTimeout(() => overlay.classList.add('hidden'), 300);
             }
         }
-        function logout() { window.location.href = '/Pages/login.html'; }
+        function logout() { window.location.href = 'login.html'; }
 
         // Highlight Active Link
         const currentPath = window.location.pathname;

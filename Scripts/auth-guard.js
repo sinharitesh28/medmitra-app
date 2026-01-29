@@ -6,7 +6,9 @@
         if (window.location.pathname.includes('login.html')) return;
 
         try {
-            const res = await fetch('/api/auth/me');
+            // Ensure CONFIG is loaded
+            const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_BASE_URL) ? CONFIG.API_BASE_URL : '';
+            const res = await fetch(`${baseUrl}/api/auth/me`);
             if (res.status === 401) {
                 window.location.href = 'login.html';
                 return;
@@ -64,7 +66,8 @@
             `;
 
             document.getElementById('logoutBtn').onclick = async () => {
-                await fetch('/api/auth/logout', { method: 'POST' });
+                const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_BASE_URL) ? CONFIG.API_BASE_URL : '';
+                await fetch(`${baseUrl}/api/auth/logout`, { method: 'POST' });
                 window.location.href = 'login.html';
             };
         }
