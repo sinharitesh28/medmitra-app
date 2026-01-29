@@ -9,17 +9,19 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
+      - DB_HOST=db
+      - DB_PORT=3306
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
-      - DB_SSL=true
+      - DB_SSL=false
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_PASS=${EMAIL_PASS}
       - JWT_SECRET=${JWT_SECRET}
       - TZ=Asia/Kolkata
+    depends_on:
+      - db
     deploy:
       resources:
         limits:
@@ -27,6 +29,24 @@ services:
     networks:
       - medmitra_net
 
+  db:
+    image: mysql:8.0
+    container_name: medmitra_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - medmitra_net
+
 networks:
   medmitra_net:
     driver: bridge
+
+volumes:
+  db_data:
