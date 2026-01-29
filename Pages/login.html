@@ -105,7 +105,15 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: userEmail })
                 });
-                const data = await res.json();
+                
+                let data;
+                try {
+                    data = await res.json();
+                } catch (parseError) {
+                    // If response is not JSON (e.g. 502 Gateway Error HTML), handle gracefully
+                    console.error('Failed to parse response JSON:', parseError);
+                    data = { error: `Server Error (${res.status})` };
+                }
 
                 if (res.ok) {
                     document.getElementById('step-email').classList.add('hidden');
@@ -151,7 +159,14 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: userEmail, otp: otp })
                 });
-                const data = await res.json();
+                
+                let data;
+                try {
+                    data = await res.json();
+                } catch (parseError) {
+                    console.error('Failed to parse response JSON:', parseError);
+                    data = { error: `Server Error (${res.status})` };
+                }
 
                 if (res.ok) {
                     msg.textContent = 'Login successful! Redirecting...';

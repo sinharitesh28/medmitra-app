@@ -10,6 +10,11 @@ function initBot() {
     if (token && token !== 'demo_bot_token') {
         bot = new TelegramBot(token, { polling: true });
         
+        // Prevent Crash on Polling Error
+        bot.on('polling_error', (error) => {
+            console.error('[Bot] Polling Error:', error.code, error.message);
+        });
+        
         // Log ANY message received
         bot.on('message', (msg) => {
             console.log(`[Bot] Received message from ${msg.chat.id}: ${msg.text}`);

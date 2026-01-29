@@ -11,10 +11,8 @@ const SEARCH_URL = 'https://id.who.int/icd/entity/search';
 let accessToken = null;
 let tokenExpiresAt = 0;
 
-const fs = require('fs');
-
 function logICD(msg) {
-    fs.appendFileSync('icd_debug.log', `[${new Date().toISOString()}] ${msg}\n`);
+    console.log(`[${new Date().toISOString()}] ${msg}`);
 }
 
 // 1. Get OAuth Token

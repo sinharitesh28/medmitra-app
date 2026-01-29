@@ -19,13 +19,9 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const fs = require('fs');
-
 // Log Helper
 function logDebug(msg) {
-    const logMsg = `[${new Date().toISOString()}] ${msg}\n`;
-    console.log(msg);
-    fs.appendFileSync('auth_debug.log', logMsg);
+    console.log(`[${new Date().toISOString()}] ${msg}`);
 }
 
 // 1. Send OTP
