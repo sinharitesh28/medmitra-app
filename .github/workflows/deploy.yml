@@ -1,4 +1,4 @@
-name: Deploy to Google Cloud (Swap Enabled)
+name: Deploy to Google Cloud (Tarball & Swap)
 
 on:
   push:
@@ -14,24 +14,30 @@ jobs:
     - name: Create .env file locally
       run: echo "${{ secrets.ENV_FILE }}" > .env
 
-    - name: Copy files to Server
+    - name: Compress files (Exclude node_modules)
+      run: |
+        tar -czf deploy.tar.gz \
+          --exclude='node_modules' \
+          --exclude='.git' \
+          --exclude='.github' \
+          Backend \
+          nginx \
+          docker-compose.prod.yml \
+          package.json \
+          schema.sql \
+          init_auth.sql \
+          Dockerfile \
+          .env \
+          DEPLOYMENT_GUIDE.md \
+          SECURITY.md
+
+    - name: Copy Tarball to Server
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.GCP_HOST }}
         username: ${{ secrets.GCP_USERNAME }}
         key: ${{ secrets.GCP_SSH_KEY }}
-        # We need the source code now! Added Pages, Scripts, Styles back?
-        # Wait, user wanted "static files not pushed".
-        # But if we build on server, we NEED source files unless we excluded them from Dockerfile.
-        # Dockerfile copies `.`. If we don't copy Pages/Scripts to server, the image won't have them.
-        # This breaks the app if app.js serves them.
-        # User said "static files are not pushed" as a problem statement or requirement.
-        # If I exclude them, the app works as API only (which seems to be the goal for CORS fix).
-        # So I will Copy "Backend", but NOT "Pages" or "Styles".
-        # But Dockerfile expects them? Dockerfile: `COPY . .`
-        # If directories are missing, COPY simply ignores them.
-        # So this is fine.
-        source: "Backend,docker-compose.prod.yml,package.json,schema.sql,init_auth.sql,Dockerfile,.env,DEPLOYMENT_GUIDE.md,SECURITY.md,nginx"
+        source: "deploy.tar.gz"
         target: "~/medmitra"
 
     - name: Deploy on Server
@@ -43,8 +49,16 @@ jobs:
         command_timeout: 40m
         script: |
           export PATH=$PATH:/usr/local/bin
+          
+          # Create directory if missing
+          mkdir -p ~/medmitra
           cd ~/medmitra
           
+          # Extract Files
+          echo "Extracting files..."
+          tar -xzf deploy.tar.gz
+          rm deploy.tar.gz
+
           # --- 1. ENABLE SWAP (Crucial for Build) ---
           echo "Checking Swap..."
           if ! swapon --show | grep -q "/swapfile"; then
