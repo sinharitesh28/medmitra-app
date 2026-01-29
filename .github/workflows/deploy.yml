@@ -1,68 +1,104 @@
-name: Deploy to Google Cloud
+name: Build and Deploy to GCP
 
 on:
   push:
     branches: [ "main" ]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: sinharitesh28/medmitra-app
+
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
   deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Create .env file locally
-      run: echo "${{ secrets.ENV_FILE }}" > .env
+      - name: Create .env file locally
+        run: echo "${{ secrets.ENV_FILE }}" > .env
 
-    - name: Copy files to Server
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.GCP_HOST }}
-        username: ${{ secrets.GCP_USERNAME }}
-        key: ${{ secrets.GCP_SSH_KEY }}
-        source: "Backend,docker-compose.prod.yml,package.json,schema.sql,init_auth.sql,Dockerfile,.env,DEPLOYMENT_GUIDE.md,SECURITY.md"
-        target: "~/medmitra"
+      - name: Copy Config Files to Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          # Only copy runtime config, DB schemas, and nginx. Source code is in the Docker Image.
+          source: "docker-compose.prod.yml,package.json,schema.sql,init_auth.sql,.env,DEPLOYMENT_GUIDE.md,SECURITY.md"
+          target: "~/medmitra"
 
-    - name: Deploy on Server
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.GCP_HOST }}
-        username: ${{ secrets.GCP_USERNAME }}
-        key: ${{ secrets.GCP_SSH_KEY }}
-        command_timeout: 30m
-        script: |
-          export PATH=$PATH:/usr/local/bin
-          cd ~/medmitra
-          
-          # Debug: Resource Usage
-          echo "--- Server Resources BEFORE ---"
-          free -m
-          df -h
-          echo "-----------------------------"
+      - name: Deploy on Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          command_timeout: 30m
+          script: |
+            export PATH=$PATH:/usr/local/bin
+            cd ~/medmitra
+            
+            # Login to GHCR (Using the workflow token passed via env won't work easily in SSH)
+            # Instead, we assume the image is public OR we use a PAT if private.
+            # Since we can't easily pass the ephemeral GITHUB_TOKEN to the SSH session without exposing it in logs,
+            # We will try to pull. If it fails, the repo package settings need to be "Public".
+            
+            echo "Login to GHCR..."
+            echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-          # Cleanup: Free up space and memory
-          echo "Pruning Docker..."
-          sudo docker system prune -af --volumes || true
+            # Pull the latest image
+            echo "Pulling latest image..."
+            sudo docker pull ghcr.io/${{ env.IMAGE_NAME }}:latest
 
-          # Create Nginx Config (Using printf to avoid CRLF issues)
-          printf "server {\n    listen 80;\n    server_name 136-116-93-95.sslip.io;\n    return 301 https://\$host\$request_uri;\n}\n\nserver {\n    listen 443 ssl;\n    server_name 136-116-93-95.sslip.io;\n\n    ssl_certificate /etc/letsencrypt/live/136-116-93-95.sslip.io/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/136-116-93-95.sslip.io/privkey.pem;\n\n    location / {\n        proxy_pass http://localhost:3000;\n        proxy_set_header Host \$host;\n        proxy_set_header X-Real-IP \$remote_addr;\n        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto \$scheme;\n    }\n}\n" > medmitra_site.conf
+            # Create Nginx Config (Using printf)
+            printf "server {\n    listen 80;\n    server_name 136-116-93-95.sslip.io;\n    return 301 https://\$host\$request_uri;\n}\n\nserver {\n    listen 443 ssl;\n    server_name 136-116-93-95.sslip.io;\n\n    ssl_certificate /etc/letsencrypt/live/136-116-93-95.sslip.io/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/136-116-93-95.sslip.io/privkey.pem;\n\n    location / {\n        proxy_pass http://localhost:3000;\n        proxy_set_header Host \$host;\n        proxy_set_header X-Real-IP \$remote_addr;\n        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto \$scheme;\n    }\n}\n" > medmitra_site.conf
 
-          # Apply Nginx Config
-          echo "Updating Nginx Config..."
-          sudo rm -f /etc/nginx/sites-enabled/default
-          sudo cp medmitra_site.conf /etc/nginx/sites-available/medmitra
-          sudo ln -sf /etc/nginx/sites-available/medmitra /etc/nginx/sites-enabled/medmitra
-          sudo nginx -t && sudo systemctl restart nginx
+            # Apply Nginx Config
+            echo "Updating Nginx Config..."
+            sudo rm -f /etc/nginx/sites-enabled/default
+            sudo cp medmitra_site.conf /etc/nginx/sites-available/medmitra
+            sudo ln -sf /etc/nginx/sites-available/medmitra /etc/nginx/sites-enabled/medmitra
+            sudo nginx -t && sudo systemctl restart nginx
 
-          # Build & Deploy
-          echo "Starting Build..."
-          sudo docker ps -a -q --filter name=medmitra | xargs -r sudo docker rm -f || true
-          
-          # Force build to ensure latest code, but use --no-cache only if necessary (omitted for speed)
-          sudo docker-compose -f docker-compose.prod.yml up --build -d
-          
-          sudo docker ps
-          
-          echo "--- Server Resources AFTER ---"
-          free -m
-          df -h
+            # Restart Docker Containers with New Image
+            echo "Restarting Containers..."
+            sudo docker-compose -f docker-compose.prod.yml down
+            sudo docker system prune -f # Clean up old images
+            sudo docker-compose -f docker-compose.prod.yml up -d
+            sudo docker ps

@@ -2,7 +2,8 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    # build: .
+    image: ghcr.io/sinharitesh28/medmitra-app:latest
     container_name: medmitra_app
     restart: always
     ports:
