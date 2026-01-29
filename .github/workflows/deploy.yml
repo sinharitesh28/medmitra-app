@@ -32,6 +32,11 @@ jobs:
         script: |
           export PATH=$PATH:/usr/local/bin
           cd ~/medmitra
+          
+          # Fix Nginx Config (Remove duplicate CORS headers)
+          sudo cp nginx/medmitra_site.conf /etc/nginx/sites-available/medmitra
+          sudo nginx -t && sudo systemctl reload nginx
+
           sudo docker ps -a -q --filter name=medmitra | xargs -r sudo docker rm -f || true
           sudo docker-compose -f docker-compose.prod.yml up --build -d
           sudo docker ps

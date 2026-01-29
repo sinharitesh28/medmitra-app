@@ -3,6 +3,8 @@
 Copy and paste the block below into your **GCP SSH Terminal** to fix the "CORS Policy" error blocking your login.
 
 ### Block: Final CORS & Nginx Fix
+> **Note:** This configuration is now automatically applied by the deployment workflow (`deploy.yml`) using `nginx/medmitra_site.conf`. You do not need to run this manually unless setting up a new server.
+
 ```bash
 sudo tee /etc/nginx/sites-available/medmitra << 'EOF'
 server {
@@ -19,22 +21,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/136-116-93-95.sslip.io/privkey.pem;
 
     location / {
-        # CORS Headers
-        add_header 'Access-Control-Allow-Origin' 'https://sinharitesh28.github.io' always;
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE' always;
-        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
-        add_header 'Access-Control-Allow-Credentials' 'true' always;
-
-        if ($request_method = 'OPTIONS') {
-            add_header 'Access-Control-Allow-Origin' 'https://sinharitesh28.github.io' always;
-            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE' always;
-            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
-            add_header 'Access-Control-Allow-Credentials' 'true' always;
-            add_header 'Content-Type' 'text/plain; charset=utf-8';
-            add_header 'Content-Length' 0;
-            return 204;
-        }
-
+        # Proxy to Node.js App (Let the App handle CORS)
         proxy_pass http://localhost:3000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
