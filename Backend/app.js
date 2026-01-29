@@ -16,7 +16,8 @@ const { authGuard, adminGuard } = require('./auth-middleware');
 // Enable CORS for GitHub Pages and Local Development
 app.use(cors({
     origin: [
-        'https://nilesh-12.github.io', // REPLACE THIS with your actual GitHub Pages URL
+        'https://sinharitesh28.github.io', 
+        'https://sinharitesh28.github.io/medmitra-app',
         'http://127.0.0.1:5500',
         'http://localhost:3000'
     ],
