@@ -159,7 +159,7 @@
 
         async function fetchLogs() {
             try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/logs`);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/logs`, { credentials: 'include' });
                 allLogs = await response.json();
                 renderTable(allLogs);
             } catch (error) {

@@ -103,7 +103,8 @@
                 const res = await fetch(`${CONFIG.API_BASE_URL}/api/auth/send-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: userEmail })
+                    body: JSON.stringify({ email: userEmail }),
+                    credentials: 'include'
                 });
                 
                 let data;
@@ -157,7 +158,8 @@
                 const res = await fetch(`${CONFIG.API_BASE_URL}/api/auth/verify-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: userEmail, otp: otp })
+                    body: JSON.stringify({ email: userEmail, otp: otp }),
+                    credentials: 'include'
                 });
                 
                 let data;

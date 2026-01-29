@@ -160,7 +160,7 @@
 
         async function fetchInactivePatients() {
             try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/inactive-patients`);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/inactive-patients`, { credentials: 'include' });
                 inactivePatients = await response.json();
                 renderTable(inactivePatients);
             } catch (error) {

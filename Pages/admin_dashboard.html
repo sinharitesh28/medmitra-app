@@ -242,13 +242,13 @@
         /* --- Existing Logic --- */
         let botUsername = '';
 
-        fetch(`${CONFIG.API_BASE_URL}/api/medmitra/bot-info`)
+        fetch(`${CONFIG.API_BASE_URL}/api/medmitra/bot-info`, { credentials: 'include' })
             .then(r => r.json())
             .then(data => botUsername = data.username);
 
         async function fetchUsers() {
             try {
-                const res = await fetch(`${CONFIG.API_BASE_URL}/api/admin/users`);
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/admin/users`, { credentials: 'include' });
                 if (!res.ok) throw new Error('Unauthorized');
                 const users = await res.json();
                 
@@ -356,7 +356,8 @@
                 const res = await fetch(url, {
                     method: method,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(data),
+                    credentials: 'include'
                 });
                 
                 if (res.ok) {
@@ -374,7 +375,7 @@
         async function toggleUser(id) {
             if (!confirm('Change status for this user?')) return;
             try {
-                const res = await fetch(`${CONFIG.API_BASE_URL}/api/admin/users/${id}`, { method: 'DELETE' });
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/admin/users/${id}`, { method: 'DELETE', credentials: 'include' });
                 if (res.ok) fetchUsers();
                 else alert('Failed to change status');
             } catch (e) { alert('Error'); }

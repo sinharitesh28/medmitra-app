@@ -160,7 +160,7 @@
 
         async function fetchAlerts() {
             try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/reaction-alerts`);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/reaction-alerts`, { credentials: 'include' });
                 alerts = await response.json();
                 renderTable(alerts);
             } catch (error) {

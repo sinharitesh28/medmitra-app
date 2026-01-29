@@ -160,7 +160,7 @@
 
         async function fetchSchedule() {
             try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/assigned-reminders`);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/assigned-reminders`, { credentials: 'include' });
                 scheduleData = await response.json();
                 renderTable(scheduleData);
             } catch (error) {

@@ -8,7 +8,7 @@
         try {
             // Ensure CONFIG is loaded
             const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_BASE_URL) ? CONFIG.API_BASE_URL : '';
-            const res = await fetch(`${baseUrl}/api/auth/me`);
+            const res = await fetch(`${baseUrl}/api/auth/me`, { credentials: 'include' });
             if (res.status === 401) {
                 window.location.href = 'login.html';
                 return;
@@ -67,7 +67,7 @@
 
             document.getElementById('logoutBtn').onclick = async () => {
                 const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_BASE_URL) ? CONFIG.API_BASE_URL : '';
-                await fetch(`${baseUrl}/api/auth/logout`, { method: 'POST' });
+                await fetch(`${baseUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' });
                 window.location.href = 'login.html';
             };
         }
