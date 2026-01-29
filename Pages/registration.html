@@ -9,19 +9,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="../Scripts/config.js"></script>
+    <script src="../Scripts/i18n.js"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: '#1B211A',
-                        secondary: '#628141',
-                        tertiary: '#8BAE66',
-                        quaternary: '#EBD5AB',
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { primary: '#1B211A', secondary: '#628141', tertiary: '#8BAE66', quaternary: '#EBD5AB' }
                 }
             }
         }
@@ -29,14 +23,8 @@
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Custom scrollbar for suggestions */
         .suggestions-list::-webkit-scrollbar { width: 5px; }
-        .suggestions-list::-webkit-scrollbar-track { background: transparent; }
         .suggestions-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .suggestions-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* Smooth fade in */
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -90,273 +78,157 @@
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-                            New Patient Registration
-                        </h2>
+                        <h2 class="text-2xl font-bold text-gray-800 tracking-tight" id="page-title">New Patient Registration</h2>
                     </div>
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 md:p-10 space-y-8 scroll-smooth">
+            <main class="flex-1 overflow-y-auto p-4 md:p-10 space-y-8 scroll-smooth">
                 <div class="max-w-5xl mx-auto">
-                    
                     <form id="medMitraForm" class="space-y-8">
-                        
-                        <!-- 1. Patient Details Card -->
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 relative overflow-hidden group hover:shadow-md transition-shadow duration-300">
+                        <!-- Patient Details -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 relative group hover:shadow-md transition-shadow">
                             <div class="absolute top-0 left-0 w-1.5 h-full bg-secondary"></div>
                             <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
                                 <span class="bg-secondary/10 p-2 rounded-lg text-secondary">👤</span> Patient Details
                             </h3>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div class="space-y-1">
-                                    <label for="opdNo" class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">OPD Number</label>
-                                    <div class="relative group/input">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <svg class="h-5 w-5 text-gray-400 group-focus-within/input:text-secondary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                                            </svg>
-                                        </div>
-                                        <input type="text" id="opdNo" required class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all duration-200 sm:text-sm" placeholder="e.g. OPD-2024-001">
-                                    </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">OPD Number</label>
+                                    <input type="text" id="opdNo" required class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all">
                                 </div>
-                                
-                                <div class="space-y-1">
-                                    <label for="patientName" class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Full Name</label>
-                                    <div class="relative group/input">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <svg class="h-5 w-5 text-gray-400 group-focus-within/input:text-secondary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                        </div>
-                                        <input type="text" id="patientName" required class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all duration-200 sm:text-sm" placeholder="e.g. Rajesh Kumar">
-                                    </div>
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Full Name</label>
+                                    <input type="text" id="patientName" required class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all">
                                 </div>
-
-                                <div class="space-y-1">
-                                    <label for="contactNumber" class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Contact Number</label>
-                                    <div class="relative group/input">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <svg class="h-5 w-5 text-gray-400 group-focus-within/input:text-secondary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                            </svg>
-                                        </div>
-                                        <input type="text" id="contactNumber" required class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all duration-200 sm:text-sm" placeholder="+91 XXXXX XXXXX">
-                                    </div>
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Contact Number</label>
+                                    <input type="text" id="contactNumber" required class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all">
                                 </div>
-                                
-                                <div class="space-y-1">
-                                    <label for="language" class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Reminder Language</label>
-                                    <div class="relative group/input">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <svg class="h-5 w-5 text-gray-400 group-focus-within/input:text-secondary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                                            </svg>
-                                        </div>
-                                        <select id="language" class="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 focus:outline-none focus:bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all duration-200 sm:text-sm appearance-none">
-                                            <option value="en">English (Default)</option>
-                                            <option value="hi">Hindi (हिन्दी)</option>
-                                            <option value="gu">Gujarati (ગુજરાતી)</option>
-                                            <option value="bn">Bengali (বাংলা)</option>
-                                            <option value="mr">Marathi (मराठी)</option>
-                                            <option value="ta">Tamil (தமிழ்)</option>
-                                            <option value="te">Telugu (తెలుగు)</option>
-                                            <option value="kn">Kannada (ಕನ್ನಡ)</option>
-                                        </select>
-                                        <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                        </div>
-                                    </div>
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Reminder Language</label>
+                                    <select id="language" class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all appearance-none">
+                                        <option value="en">English</option>
+                                        <option value="hi">Hindi</option>
+                                        <option value="gu">Gujarati</option>
+                                        <option value="bn">Bengali</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 2. Clinical Info Card -->
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 relative overflow-hidden group hover:shadow-md transition-shadow duration-300">
+                        <!-- Diagnosis -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 relative group">
                              <div class="absolute top-0 left-0 w-1.5 h-full bg-quaternary"></div>
-                             <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                                <span class="bg-quaternary/20 p-2 rounded-lg text-yellow-700">🩺</span> Clinical Diagnosis
-                            </h3>
-
-                            <div class="space-y-6">
-                                <!-- Chief Complaint -->
-                                <div class="relative space-y-1">
-                                    <label for="complaint" class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Chief Complaint (ICD-11)</label>
-                                    <div class="relative group/input">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <svg class="h-5 w-5 text-gray-400 group-focus-within/input:text-secondary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                        </div>
-                                        <input type="text" id="complaint" placeholder="Start typing symptom (e.g. Fever)..." onkeyup="searchICD(this, 'complaint-list', 'complaintCode')" autocomplete="off"
-                                            class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all duration-200 sm:text-sm">
-                                    </div>
+                             <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">🩺 Clinical Info</h3>
+                             <div class="space-y-6">
+                                <div class="relative">
+                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Chief Complaint</label>
+                                    <input type="text" id="complaint" onkeyup="searchICD(this, 'complaint-list', 'complaintCode')" autocomplete="off" class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all">
                                     <input type="hidden" id="complaintCode">
-                                    <ul id="complaint-list" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-2 shadow-2xl max-h-60 overflow-y-auto hidden ring-1 ring-black/5"></ul>
+                                    <ul id="complaint-list" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-2 shadow-xl max-h-60 overflow-y-auto hidden"></ul>
                                 </div>
-
-                                <!-- Diagnosis -->
-                                <div class="relative space-y-1">
-                                    <div class="flex justify-between items-end mb-1">
-                                        <label for="diagnosis" class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Confirmed Diagnosis</label>
-                                        <div class="flex items-center gap-2 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
-                                            <input type="checkbox" id="copyComplaint" onchange="copyComplaintToDiagnosis()" class="w-4 h-4 text-secondary focus:ring-secondary border-gray-300 rounded cursor-pointer">
-                                            <label for="copyComplaint" class="text-xs font-semibold text-gray-600 cursor-pointer select-none">Same as Complaint</label>
-                                        </div>
-                                    </div>
-                                    <div class="relative group/input">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <svg class="h-5 w-5 text-gray-400 group-focus-within/input:text-secondary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                        </div>
-                                        <input type="text" id="diagnosis" placeholder="Start typing diagnosis..." onkeyup="searchICD(this, 'diagnosis-list', 'diagnosisCode')" autocomplete="off"
-                                            class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all duration-200 sm:text-sm">
-                                    </div>
+                                <div class="relative">
+                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Confirmed Diagnosis</label>
+                                    <input type="text" id="diagnosis" onkeyup="searchICD(this, 'diagnosis-list', 'diagnosisCode')" autocomplete="off" class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all">
                                     <input type="hidden" id="diagnosisCode">
-                                    <ul id="diagnosis-list" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-2 shadow-2xl max-h-60 overflow-y-auto hidden ring-1 ring-black/5"></ul>
+                                    <ul id="diagnosis-list" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-2 shadow-xl max-h-60 overflow-y-auto hidden"></ul>
                                 </div>
-                            </div>
+                             </div>
                         </div>
-                        
-                        <!-- 3. Prescription Card -->
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 relative overflow-hidden">
+
+                        <!-- Therapy -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 relative group overflow-visible">
                              <div class="absolute top-0 left-0 w-1.5 h-full bg-tertiary"></div>
                              <div class="flex justify-between items-center mb-6">
-                                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                                    <span class="bg-tertiary/20 p-2 rounded-lg text-secondary">💊</span> Therapy Regimen
-                                </h3>
-                                <button type="button" onclick="addTherapyRow()" class="px-4 py-2 bg-secondary/5 text-secondary hover:bg-secondary hover:text-white border border-secondary/20 hover:border-transparent rounded-lg text-sm font-semibold transition-all shadow-sm flex items-center gap-2 group">
-                                    <span class="text-lg leading-none group-hover:rotate-90 transition-transform duration-300">+</span> Add Drug
-                                </button>
+                                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">💊 Therapy Regimen</h3>
+                                <button type="button" onclick="addTherapyRow()" class="px-4 py-2 bg-secondary/10 text-secondary border border-secondary/20 rounded-lg text-sm font-bold transition-all">+ Add Drug</button>
                             </div>
-
                             <div class="overflow-x-auto rounded-xl border border-gray-200">
                                 <table id="therapyTable" class="w-full text-left border-collapse min-w-[700px]">
                                     <thead>
                                         <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-semibold border-b border-gray-200">
-                                            <th class="px-5 py-4 w-1/3">Drug Name</th>
-                                            <th class="px-5 py-4 w-1/5">Dose</th>
+                                            <th class="px-5 py-4">Drug Name</th>
+                                            <th class="px-5 py-4">Dose</th>
                                             <th class="px-5 py-4">Schedule</th>
                                             <th class="px-5 py-4">End Date</th>
                                             <th class="px-5 py-4 text-center">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-100 bg-white">
-                                        <!-- Rows added by JS -->
-                                    </tbody>
+                                    <tbody class="divide-y divide-gray-100 bg-white"></tbody>
                                 </table>
                             </div>
                         </div>
 
-                        <div class="pt-4 pb-12">
-                            <button type="submit" class="w-full bg-gradient-to-r from-primary to-[#2a3528] hover:to-primary text-quaternary font-bold py-4 rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-0.5 tracking-wide text-lg flex items-center justify-center gap-3">
-                                <span>🚀</span> Generate QR & Register Patient
-                            </button>
-                        </div>
+                        <button type="submit" class="w-full bg-primary text-quaternary font-bold py-4 rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-0.5 tracking-wide text-lg">Generate QR & Register</button>
                     </form>
 
                     <div id="message" class="hidden mt-8 p-6 rounded-xl text-center text-sm font-bold border fade-in"></div>
 
-                    <!-- QR Code Section -->
                     <div id="qr-container" class="hidden mt-10 text-center bg-white p-10 rounded-3xl border border-gray-100 shadow-xl fade-in relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-secondary via-tertiary to-quaternary"></div>
                         <h3 class="text-2xl font-bold text-gray-800 mb-2">Scan to Activate</h3>
-                        <p class="text-gray-500 text-sm mb-8 max-w-sm mx-auto">Ask the patient to scan this QR code with their Telegram app and click <strong>"Start"</strong> to begin reminders.</p>
-                        
-                        <div class="flex justify-center mb-8 relative">
-                            <div class="absolute inset-0 bg-secondary/20 blur-2xl rounded-full transform scale-75"></div>
-                            <div id="qrcode" class="p-6 bg-white rounded-2xl shadow-lg border border-gray-100 relative z-10"></div>
-                        </div>
-                        <div id="status-text" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary font-bold animate-pulse">
-                            <span class="w-2 h-2 bg-secondary rounded-full"></span>
-                            Waiting for patient consent...
-                        </div>
+                        <div class="flex justify-center mb-8"><div id="qrcode" class="p-6 bg-white rounded-2xl shadow-lg border border-gray-100 relative z-10"></div></div>
+                        <div id="status-text" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary font-bold animate-pulse">Waiting for patient consent...</div>
                     </div>
-
                 </div>
             </main>
         </div>
     </div>
 
     <script>
-        // Sidebar & Nav Logic
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            const isHidden = sidebar.classList.contains('-translate-x-full');
-            
-            if (isHidden) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('opacity-0');
-                setTimeout(() => overlay.classList.add('hidden'), 300);
-            }
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
         }
-        
         function logout() { window.location.href = '/Pages/login.html'; }
 
-        // Highlight Active Link
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('.nav-link').forEach(link => {
-            if(link.getAttribute('href') === currentPath) {
-                link.classList.add('bg-secondary', 'text-white', 'shadow-lg', 'shadow-secondary/20', 'border-l-4', 'border-quaternary');
-                link.classList.remove('text-gray-300', 'hover:bg-white/5');
-            } else {
-                link.classList.add('text-gray-400');
-            }
-        });
-
         /* --- Application Logic --- */
-        let botUsername = '';
         let pollingInterval = null;
         let rowCount = 0;
+        const botUsername = CONFIG.BOT_USERNAME;
 
-        const fetchBotInfo = (retries = 5) => {
-            fetch(`${CONFIG.API_BASE_URL}/api/medmitra/bot-info`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.username) {
-                        botUsername = data.username;
-                    } else if (retries > 0) {
-                        setTimeout(() => fetchBotInfo(retries - 1), 2000);
-                    }
-                })
-                .catch(err => console.error('Failed to get bot info', err));
-        };
-        fetchBotInfo();
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
 
-        let icdTimeout = null;
-        async function searchICD(input, listId, codeId) {
+        const searchICD = debounce(async (input, listId, codeId) => {
             const term = input.value;
             const list = document.getElementById(listId);
-            
-            if (term.length < 3) {
-                list.classList.add('hidden');
-                return;
-            }
+            if (term.length < 3) { list.classList.add('hidden'); return; }
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/icd/search?q=${encodeURIComponent(term)}`);
+                const data = await res.json();
+                if (data.length > 0) {
+                    list.innerHTML = data.map(item => `<li onclick="selectICD('${item.title}', '${item.code}', '${listId}', '${input.id}', '${codeId}')" class="px-5 py-3 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-none"><div>${item.title}</div><div class="text-xs text-gray-400 font-mono">${item.code}</div></li>`).join('');
+                    list.classList.remove('hidden');
+                } else { list.classList.add('hidden'); }
+            } catch (e) { console.error(e); }
+        }, 400);
 
-            clearTimeout(icdTimeout);
-            icdTimeout = setTimeout(async () => {
-                try {
-                    const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/icd/search?q=${encodeURIComponent(term)}`);
-                    const data = await res.json();
-
-                    if (data.length > 0) {
-                        list.innerHTML = data.map(item => `
-                            <li onclick="selectICD('${item.title}', '${item.code}', '${listId}', '${input.id}', '${codeId}')"
-                                class="px-5 py-3 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-none group transition-colors flex justify-between items-center">
-                                <div class="font-medium text-gray-700 group-hover:text-primary transition-colors">${item.title}</div>
-                                <div class="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded border border-gray-100">${item.code}</div>
-                            </li>
-                        `).join('');
-                        list.classList.remove('hidden');
-                    } else {
-                        list.classList.add('hidden');
-                    }
-                } catch (e) { console.error(e); }
-            }, 400);
-        }
+        const searchDrug = debounce(async (input, id) => {
+            const term = input.value;
+            const list = document.getElementById(`suggestions-${id}`);
+            if (term.length < 2) { list.classList.add('hidden'); return; }
+            try {
+                const [localRes, globalRes] = await Promise.all([
+                    fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/formulary?q=${encodeURIComponent(term)}`),
+                    fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/search?q=${encodeURIComponent(term)}`)
+                ]);
+                const localData = await localRes.json();
+                const globalData = await globalRes.json();
+                const results = [...localData.map(d => ({ ...d, source: 'Formulary' })), ...globalData.filter(g => !localData.some(l => l.rxcui === g.rxcui)).map(d => ({ ...d, source: 'Global' }))].slice(0, 10);
+                if (results.length > 0) {
+                    list.innerHTML = results.map(d => `<li onclick="selectDrug(this, ${id}, '${d.drug_name}', '${d.rxcui}', '${d.brand_name || ''}')" class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-none flex justify-between items-center"><div class="text-sm"><b>${d.drug_name}</b><br><small>${d.brand_name}</small></div><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-md ${d.source === 'Formulary' ? 'bg-secondary/10 text-secondary' : 'bg-gray-100 text-gray-500'}">${d.source}</span></li>`).join('');
+                    list.classList.remove('hidden');
+                } else { list.classList.add('hidden'); }
+            } catch (e) { console.error(e); }
+        }, 300);
 
         function selectICD(title, code, listId, inputId, codeId) {
             document.getElementById(inputId).value = title;
@@ -364,98 +236,12 @@
             document.getElementById(listId).classList.add('hidden');
         }
 
-        function copyComplaintToDiagnosis() {
-            const checkbox = document.getElementById('copyComplaint');
-            if (checkbox.checked) {
-                document.getElementById('diagnosis').value = document.getElementById('complaint').value;
-                document.getElementById('diagnosisCode').value = document.getElementById('complaintCode').value;
-            } else {
-                document.getElementById('diagnosis').value = '';
-                document.getElementById('diagnosisCode').value = '';
-            }
-        }
-
         function addTherapyRow() {
             const table = document.getElementById('therapyTable').getElementsByTagName('tbody')[0];
             const row = table.insertRow();
             const id = rowCount++;
-            
             row.className = "hover:bg-gray-50/50 transition-colors group animate-[fadeIn_0.3s_ease-in-out]";
-            
-            row.innerHTML = `
-                <td class="px-5 py-3 relative align-top">
-                    <input type="text" placeholder="Start typing generic/brand..." onkeyup="searchDrug(this, ${id})" autocomplete="off" required
-                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm bg-white transition-all shadow-sm">
-                    <ul id="suggestions-${id}" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-1 shadow-2xl max-h-48 overflow-y-auto hidden left-0 ring-1 ring-black/5"></ul>
-                    <input type="hidden" class="rxcui-hidden"> 
-                </td>
-                <td class="px-5 py-3 align-top">
-                    <input list="doses-${id}" type="text" placeholder="e.g. 500mg" required
-                         class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm bg-white transition-all shadow-sm">
-                    <datalist id="doses-${id}"></datalist>
-                </td>
-                <td class="px-5 py-3 align-top">
-                    <input type="text" placeholder="09:00, 21:00" required
-                         class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm bg-white transition-all shadow-sm">
-                </td>
-                <td class="px-5 py-3 align-top">
-                    <input type="date" required
-                         class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm bg-white transition-all text-gray-600 shadow-sm">
-                </td>
-                <td class="px-5 py-3 text-center align-top pt-4">
-                    <button type="button" onclick="this.closest('tr').remove()" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                </td>
-            `;
-        }
-
-        let searchTimeout = null;
-        async function searchDrug(input, id) {
-            const term = input.value;
-            const list = document.getElementById(`suggestions-${id}`);
-            
-            if (term.length < 2) {
-                list.classList.add('hidden');
-                return;
-            }
-
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(async () => {
-                try {
-                    const localRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/formulary?q=${encodeURIComponent(term)}`);
-                    const localData = await localRes.json();
-                    const globalRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/search?q=${encodeURIComponent(term)}`);
-                    const globalData = await globalRes.json();
-
-                    const results = [
-                        ...localData.map(d => ({ ...d, source: 'Formulary' })),
-                        ...globalData.filter(g => !localData.some(l => l.rxcui === g.rxcui)).map(d => ({ ...d, source: 'Global' }))
-                    ].slice(0, 10);
-
-                    if (results.length > 0) {
-                        list.innerHTML = results.map(d => `
-                            <li onclick="selectDrug(this, ${id}, '${d.drug_name}', '${d.rxcui}', '${d.brand_name || ''}')"
-                                class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-none flex justify-between items-center group transition-colors">
-                                <div class="text-sm">
-                                    <span class="font-semibold text-gray-700 group-hover:text-primary transition-colors">${d.drug_name}</span>
-                                    ${d.brand_name ? `<span class="text-gray-400 text-xs ml-1 block group-hover:text-gray-500">(${d.brand_name})</span>` : ''}
-                                </div>
-                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-md tracking-wider ${
-                                    d.source === 'Formulary' 
-                                    ? 'bg-secondary/10 text-secondary border border-secondary/20' 
-                                    : 'bg-gray-100 text-gray-500 border border-gray-200'
-                                }">${d.source}</span>
-                            </li>
-                        `).join('');
-                        list.classList.remove('hidden');
-                    } else {
-                        list.classList.add('hidden');
-                    }
-                } catch (e) {
-                    console.error('Search error', e);
-                }
-            }, 300);
+            row.innerHTML = `<td class="px-5 py-3 relative align-top"><input type="text" placeholder="Drug..." onkeyup="searchDrug(this, ${id})" autocomplete="off" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"><ul id="suggestions-${id}" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-1 shadow-2xl max-h-48 overflow-y-auto hidden left-0 ring-1 ring-black/5"></ul><input type="hidden" class="rxcui-hidden"></td><td class="px-5 py-3 align-top"><input list="doses-${id}" type="text" placeholder="500mg" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"><datalist id="doses-${id}"></datalist></td><td class="px-5 py-3 align-top"><input type="text" placeholder="09:00, 21:00" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"></td><td class="px-5 py-3 align-top"><input type="date" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"></td><td class="px-5 py-3 text-center align-top pt-4"><button type="button" onclick="this.closest('tr').remove()" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"></path></svg></button></td>`;
         }
 
         async function selectDrug(li, id, name, rxcui, brand) {
@@ -464,29 +250,15 @@
             const hidden = row.querySelector('.rxcui-hidden');
             const list = row.querySelector('ul');
             const doseList = document.getElementById(`doses-${id}`);
-
             input.value = name + (brand ? ` (${brand})` : '');
             hidden.value = rxcui;
             list.classList.add('hidden');
-
             try {
                 const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/details/${rxcui}`);
                 const data = await res.json();
-                if (data.available_doses && data.available_doses.length > 0) {
-                    doseList.innerHTML = data.available_doses.map(d => `<option value="${d}">`).join('');
-                } else {
-                    doseList.innerHTML = '';
-                }
-            } catch (e) { console.error('Dose fetch error', e); }
+                if (data.available_doses) doseList.innerHTML = data.available_doses.map(d => `<option value="${d}">`).join('');
+            } catch (e) { console.error(e); }
         }
-
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('td') && !e.target.closest('.relative')) {
-                document.querySelectorAll('.suggestions-list').forEach(l => l.classList.add('hidden'));
-            }
-        });
-
-        addTherapyRow();
 
         document.getElementById('medMitraForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -494,95 +266,37 @@
             const qrContainer = document.getElementById('qr-container');
             const qrCodeDiv = document.getElementById('qrcode');
             const statusText = document.getElementById('status-text');
-            
             messageDiv.classList.add('hidden');
             qrContainer.classList.add('hidden');
             qrCodeDiv.innerHTML = '';
             if (pollingInterval) clearInterval(pollingInterval);
-
             const opdNo = document.getElementById('opdNo').value;
-            
             const therapies = [];
             const rows = document.getElementById('therapyTable').getElementsByTagName('tbody')[0].rows;
             for (let i = 0; i < rows.length; i++) {
                 const inputs = rows[i].getElementsByTagName('input');
-                therapies.push({
-                    drug: inputs[0].value,
-                    dose: inputs[2].value, 
-                    scheduleTimes: inputs[3].value.split(',').map(t => t.trim()),
-                    endDate: inputs[4].value
-                });
+                therapies.push({ drug: inputs[0].value, dose: inputs[1].value, scheduleTimes: inputs[2].value.split(',').map(t => t.trim()), endDate: inputs[3].value });
             }
-
-            const data = {
-                status: 'Outpatient',
-                opdNo: opdNo,
-                patientName: document.getElementById('patientName').value,
-                contactNumber: document.getElementById('contactNumber').value,
-                complaint: document.getElementById('complaint').value,
-                complaintCode: document.getElementById('complaintCode').value,
-                diagnosis: document.getElementById('diagnosis').value,
-                diagnosisCode: document.getElementById('diagnosisCode').value,
-                language: document.getElementById('language').value,
-                therapies: therapies
-            };
-
+            const data = { opdNo, patientName: document.getElementById('patientName').value, contactNumber: document.getElementById('contactNumber').value, complaint: document.getElementById('complaint').value, complaintCode: document.getElementById('complaintCode').value, diagnosis: document.getElementById('diagnosis').value, diagnosisCode: document.getElementById('diagnosisCode').value, language: document.getElementById('language').value, therapies };
             try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-
-                if (response.ok) {
-                    if (botUsername) {
-                        qrContainer.classList.remove('hidden');
-                        const telegramLink = `https://t.me/${botUsername}?start=${opdNo}`;
-                        new QRCode(qrCodeDiv, {
-                            text: telegramLink,
-                            width: 180,
-                            height: 180
-                        });
-
-                        statusText.innerHTML = '<span class="w-2 h-2 bg-secondary rounded-full"></span> Waiting for patient consent...';
-                        
-                        pollingInterval = setInterval(async () => {
-                            try {
-                                const checkRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/check-consent/${encodeURIComponent(opdNo)}`);
-                                if (!checkRes.ok) throw new Error(`Server returned ${checkRes.status}`);
-                                const checkData = await checkRes.json();
-                                
-                                if (checkData.consent) {
-                                    clearInterval(pollingInterval);
-                                    statusText.innerHTML = "✅ Consent Verified! Reminders Active.";
-                                    statusText.className = "inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 font-bold border border-green-200";
-                                    document.getElementById('medMitraForm').reset();
-                                    setTimeout(() => {
-                                        qrContainer.classList.add('hidden');
-                                    }, 5000);
-                                }
-                            } catch (pollErr) {
-                                console.error('Polling error', pollErr);
-                            }
-                        }, 3000);
-                    } else {
-                        messageDiv.textContent = 'Error: Bot username not loaded.';
-                        messageDiv.className = 'mt-8 p-6 rounded-xl text-center text-sm font-bold bg-red-50 text-red-700 border border-red-100 fade-in';
-                        messageDiv.classList.remove('hidden');
-                    }
-
-                } else {
-                    messageDiv.textContent = result.error || 'Registration failed.';
-                    messageDiv.className = 'mt-8 p-6 rounded-xl text-center text-sm font-bold bg-red-50 text-red-700 border border-red-100 fade-in';
-                    messageDiv.classList.remove('hidden');
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (res.ok) {
+                    qrContainer.classList.remove('hidden');
+                    new QRCode(qrCodeDiv, { text: `https://t.me/${botUsername}?start=${opdNo}`, width: 180, height: 180 });
+                    pollingInterval = setInterval(async () => {
+                        const check = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/check-consent/${encodeURIComponent(opdNo)}`);
+                        const checkData = await check.json();
+                        if (checkData.consent) {
+                            clearInterval(pollingInterval);
+                            statusText.innerHTML = "✅ Consent Verified!";
+                            statusText.className = "px-4 py-2 rounded-full bg-green-100 text-green-700 font-bold";
+                            document.getElementById('medMitraForm').reset();
+                        }
+                    }, 3000);
                 }
-            } catch (error) {
-                messageDiv.textContent = 'Network error.';
-                messageDiv.className = 'mt-8 p-6 rounded-xl text-center text-sm font-bold bg-red-50 text-red-700 border border-red-100 fade-in';
-                messageDiv.classList.remove('hidden');
-            }
+            } catch (error) { messageDiv.textContent = 'Error: ' + error.message; messageDiv.classList.remove('hidden'); }
         });
+        addTherapyRow();
     </script>
 </body>
 </html>
