@@ -8,7 +8,7 @@
         try {
             const res = await fetch('/api/auth/me');
             if (res.status === 401) {
-                window.location.href = '/login.html';
+                window.location.href = 'login.html';
                 return;
             }
             if (!res.ok) throw new Error('Auth check failed');
@@ -65,7 +65,7 @@
 
             document.getElementById('logoutBtn').onclick = async () => {
                 await fetch('/api/auth/logout', { method: 'POST' });
-                window.location.href = '/login.html';
+                window.location.href = 'login.html';
             };
         }
 
@@ -74,7 +74,7 @@
             const nav = document.querySelector('.medmitra-nav');
             if (nav && !nav.innerHTML.includes('admin_dashboard.html')) {
                 const adminLink = document.createElement('a');
-                adminLink.href = '/medmitra/admin_dashboard.html';
+                adminLink.href = 'admin_dashboard.html';
                 adminLink.textContent = 'Admin Panel';
                 adminLink.style.backgroundColor = '#6610f2'; // Distinction
                 adminLink.style.color = 'white';
