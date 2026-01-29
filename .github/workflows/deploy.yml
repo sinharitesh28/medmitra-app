@@ -20,7 +20,7 @@ jobs:
         host: ${{ secrets.GCP_HOST }}
         username: ${{ secrets.GCP_USERNAME }}
         key: ${{ secrets.GCP_SSH_KEY }}
-        source: ".,.env"
+        source: "Backend,Pages,Scripts,Styles,nginx,keys,docker-compose.prod.yml,package.json,schema.sql,init_auth.sql,Dockerfile,.env,DEPLOYMENT_GUIDE.md,SECURITY.md"
         target: "~/medmitra"
 
     - name: Deploy on Server
