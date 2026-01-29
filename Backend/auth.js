@@ -10,22 +10,36 @@ const JWT_SECRET = process.env.JWT_SECRET || 'medmitra_secret_key_change_me';
 
 // Configure Email Transporter
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // use SSL
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     }
 });
 
+const fs = require('fs');
+
+// Log Helper
+function logDebug(msg) {
+    const logMsg = `[${new Date().toISOString()}] ${msg}\n`;
+    console.log(msg);
+    fs.appendFileSync('auth_debug.log', logMsg);
+}
+
 // 1. Send OTP
 router.post('/send-otp', async (req, res) => {
     const { email } = req.body;
-    
+    logDebug(`Request /send-otp for ${email}`);
+
     try {
         // Check if user exists
+        logDebug('Step 1: DB Select');
         const [users] = await db.query("SELECT user_id, telegram_chat_id FROM system_users WHERE email = ? AND status = 'ACTIVE'", [email]);
         
         if (users.length === 0) {
+            logDebug('User not found');
             return res.status(404).json({ error: 'User not found or inactive.' });
         }
 
@@ -34,42 +48,68 @@ router.post('/send-otp', async (req, res) => {
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // Calculate Expiration (15 mins from now)
+        // Calculate Expiration
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
         // Save to DB
+        logDebug('Step 2: DB Update');
         await db.query("UPDATE system_users SET otp_code = ?, otp_expires_at = ? WHERE email = ?", [otp, expiresAt, email]);
 
-        let message = 'OTP sent to email.';
+        // RESPONSE IMMEDIATELY to prevent timeout
+        res.json({ success: true, message: 'OTP generated. Sending via Email/Telegram...' });
 
-        // 1. Send via Telegram (if linked)
-        const bot = getBot();
-        if (bot && user.telegram_chat_id) {
-            try {
-                await bot.sendMessage(user.telegram_chat_id, `🔐 *MedMitra Login Code*\n\nYour OTP is: *${otp}*\n\nExpires in 15 minutes.`, { parse_mode: 'Markdown' });
-                message = 'OTP sent to Telegram and Email.';
-                console.log(`[Auth] OTP sent to Telegram ${user.telegram_chat_id}`);
-            } catch (err) {
-                console.error('[Auth] Failed to send Telegram OTP:', err.message);
+        // Background Sending
+        (async () => {
+            let emailSent = false;
+            let telegramSent = false;
+
+            // 1. Send via Telegram
+            logDebug('Step 3: Telegram (Background)');
+            const bot = getBot();
+            if (bot && user.telegram_chat_id) {
+                try {
+                    await bot.sendMessage(user.telegram_chat_id, `🔐 *MedMitra Login Code*\n\nYour OTP is: *${otp}*\n\nExpires in 15 minutes.`, { parse_mode: 'Markdown' });
+                    telegramSent = true;
+                    logDebug(`Telegram Sent to ${user.telegram_chat_id}`);
+                } catch (err) {
+                    logDebug(`Telegram Failed: ${err.message}`);
+                }
+            } else {
+                logDebug('Telegram Skipped (No bot or chat_id)');
             }
-        }
 
-        // 2. Send via Email
-        const mailOptions = {
-            from: 'MedMitra <no-reply@medmitra.com>',
-            to: email,
-            subject: 'MedMitra Login Verification Code',
-            text: `Your login verification code is: ${otp}\n\nThis code expires in 15 minutes.`
-        };
+            // 2. Send via Email
+            logDebug('Step 4: Email (Background)');
+            try {
+                const mailOptions = {
+                    from: 'MedMitra <no-reply@medmitra.com>',
+                    to: email,
+                    subject: 'MedMitra Login Verification Code',
+                    text: `Your login verification code is: ${otp}\n\nThis code expires in 15 minutes.`
+                };
 
-        await transporter.sendMail(mailOptions);
-        console.log(`[Auth] OTP sent to Email ${email}`);
-        
-        res.json({ success: true, message: message });
+                const emailPromise = transporter.sendMail(mailOptions);
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Email connection timed out (5s)')), 5000)
+                );
+
+                await Promise.race([emailPromise, timeoutPromise]);
+                
+                emailSent = true;
+                logDebug(`Email Sent to ${email}`);
+            } catch (emailErr) {
+                logDebug(`Email Failed: ${emailErr.message}`);
+            }
+            
+            if (!emailSent && !telegramSent) {
+                logDebug('Background Delivery Failed for both.');
+            }
+        })().catch(err => logDebug(`Background Error: ${err.message}`));
 
     } catch (e) {
-        console.error('[Auth] Error sending OTP:', e);
-        res.status(500).json({ error: 'Internal Server Error' });
+        logDebug(`CRITICAL ERROR: ${e.message}`);
+        logDebug(e.stack);
+        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 

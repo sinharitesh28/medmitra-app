@@ -8,7 +8,8 @@ const authGuard = (req, res, next) => {
         req.path === '/api/auth/send-otp' || 
         req.path === '/api/auth/verify-otp' || 
         req.path === '/api/auth/logout' ||
-        req.path.startsWith('/api/medmitra/icd') || // TEMP DEBUG
+        req.path === '/api/medmitra/bot-info' || // Added public bot-info
+        req.path.startsWith('/api/medmitra/icd') || 
         req.path === '/index.html' || 
         req.path === '/') {
         return next();

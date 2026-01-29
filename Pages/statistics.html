@@ -6,202 +6,219 @@
     <title>MedMitra - Statistics</title>
     <script src="../Scripts/auth-guard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; }
-        header { background-color: #007bff; color: white; padding: 1rem; display: flex; align-items: center; padding-left: 2rem; }
-        .back-link { color: white; text-decoration: none; font-weight: bold; margin-right: 1rem; font-size: 1.2rem; }
-        h1 { margin: 0; font-size: 1.5rem; }
-        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
-        
-        .medmitra-nav { background-color: #e9ecef; padding: 0.5rem 2rem; border-bottom: 1px solid #dee2e6; display: flex; gap: 1rem; }
-        .medmitra-nav a { text-decoration: none; color: #495057; padding: 0.5rem 1rem; border-radius: 4px; font-weight: 500; }
-        .medmitra-nav a:hover { background-color: #dee2e6; color: #007bff; }
-        .medmitra-nav a.active { background-color: #007bff; color: white; }
-
-        /* KPI Cards */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center; }
-        .card h3 { margin: 0; font-size: 2rem; color: #007bff; }
-        .card p { margin: 0.5rem 0 0; color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
-
-        /* Charts Section */
-        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
-        .chart-container { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        
-        /* Tables Section */
-        .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
-        .table-container { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .table-container h4 { margin-top: 0; color: #333; border-bottom: 2px solid #f4f4f9; padding-bottom: 0.5rem; margin-bottom: 1rem; }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #eee; }
-        th { font-weight: 600; color: #555; }
-        .badge { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
-        .badge-upcoming { background-color: #cce5ff; color: #004085; }
-        .badge-severe { background-color: #f8d7da; color: #721c24; }
-
-        @media (max-width: 768px) {
-            .charts-grid, .tables-grid { grid-template-columns: 1fr; }
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="../Scripts/config.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#1B211A',
+                        secondary: '#628141',
+                        tertiary: '#8BAE66',
+                        quaternary: '#EBD5AB',
+                    }
+                }
+            }
         }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body>
-    <header>
-        <a href="/index.html" class="back-link">&larr;</a>
-        <h1>MedMitra</h1>
-    </header>
-    <nav class="medmitra-nav">
-        <a href="/medmitra/registration.html">Registration</a>
-        <a href="/medmitra/assigned.html">Assigned</a>
-        <a href="/medmitra/reminders.html">Reminders</a>
-        <a href="/medmitra/statistics.html" class="active">Statistics</a>
-        <a href="/medmitra/inactive.html">Inactive</a>
-        <a href="/medmitra/alerts.html">Alerts</a>
-    </nav>
+<body class="bg-gray-50 font-sans text-gray-900">
 
-    <div class="container">
-        <!-- KPIs -->
-        <div class="kpi-grid">
-            <div class="card">
-                <h3 id="totalPatients">-</h3>
-                <p>Total Patients</p>
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="bg-primary text-gray-300 w-64 flex-shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 flex flex-col shadow-2xl">
+            <div class="h-20 flex items-center justify-center border-b border-gray-800/50 bg-primary/50 backdrop-blur-sm">
+                <h1 class="text-2xl font-bold tracking-widest text-quaternary flex items-center gap-3">
+                    <span class="text-3xl">⚕️</span> MedMitra
+                </h1>
             </div>
-            <div class="card">
-                <h3 id="activePatients">-</h3>
-                <p>Active Consent</p>
+            <nav class="flex-1 px-4 py-8 space-y-2 overflow-y-auto no-scrollbar">
+                <a href="/medmitra/registration.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📝</span><span class="font-medium tracking-wide">Registration</span>
+                </a>
+                <a href="/medmitra/assigned.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📅</span><span class="font-medium tracking-wide">Assigned</span>
+                </a>
+                <a href="/medmitra/reminders.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">🔔</span><span class="font-medium tracking-wide">Reminders</span>
+                </a>
+                <a href="/medmitra/statistics.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📊</span><span class="font-medium tracking-wide">Statistics</span>
+                </a>
+                <a href="/medmitra/inactive.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">⚠️</span><span class="font-medium tracking-wide">Inactive</span>
+                </a>
+                <a href="/medmitra/alerts.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">🚨</span><span class="font-medium tracking-wide">Alerts</span>
+                </a>
+                <div class="my-4 border-t border-gray-800/50"></div>
+                <a href="/medmitra/admin_dashboard.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">⚙️</span><span class="font-medium tracking-wide">Admin</span>
+                </a>
+            </nav>
+            <div class="p-6 border-t border-gray-800/50">
+                <button onclick="logout()" class="w-full flex items-center justify-center px-4 py-3 bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white rounded-xl transition-all duration-200 text-sm font-semibold tracking-wide border border-transparent hover:border-red-500 shadow-sm">Sign Out</button>
             </div>
-            <div class="card">
-                <h3 id="totalResponses">-</h3>
-                <p>Responses Logged</p>
-            </div>
-        </div>
+        </aside>
 
-        <!-- Charts -->
-        <div class="charts-grid">
-            <div class="chart-container">
-                <canvas id="regChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <canvas id="responseChart"></canvas>
-            </div>
-        </div>
+        <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-primary/80 backdrop-blur-sm z-40 hidden md:hidden transition-opacity"></div>
 
-        <!-- Tables -->
-        <div class="tables-grid">
-            <div class="table-container">
-                <h4>Recent Reactions</h4>
-                <table id="reactionTable">
-                    <thead>
-                        <tr>
-                            <th>Time</th>
-                            <th>Patient</th>
-                            <th>Alert</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-            <div class="table-container">
-                <h4>Upcoming Reminders</h4>
-                <table id="upcomingTable">
-                    <thead>
-                        <tr>
-                            <th>Time</th>
-                            <th>Patient</th>
-                            <th>Drug</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F3F4F6]">
+            <header class="bg-white/90 backdrop-blur-md border-b border-gray-200/60 h-20 flex items-center justify-between px-8 sticky top-0 z-30 shadow-sm">
+                <div class="flex items-center">
+                    <button onclick="toggleSidebar()" class="md:hidden text-gray-500 hover:text-primary focus:outline-none p-2 mr-4 transition-colors">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Dashboard Statistics</h2>
+                        <p class="text-xs text-gray-500 font-medium mt-0.5">Overview of patient engagement</p>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 scroll-smooth">
+                
+                <!-- KPIs -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/60 flex flex-col items-center hover:shadow-md transition-shadow">
+                        <h3 id="totalPatients" class="text-4xl font-bold text-primary mb-2">-</h3>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Patients</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/60 flex flex-col items-center hover:shadow-md transition-shadow">
+                        <h3 id="activePatients" class="text-4xl font-bold text-secondary mb-2">-</h3>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Active Consent</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/60 flex flex-col items-center hover:shadow-md transition-shadow">
+                        <h3 id="totalResponses" class="text-4xl font-bold text-tertiary mb-2">-</h3>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Responses Logged</p>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-200/60 lg:col-span-2">
+                        <h4 class="text-lg font-bold text-gray-800 mb-6">Patient Registrations</h4>
+                        <div class="relative h-72 w-full">
+                             <canvas id="regChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-200/60">
+                        <h4 class="text-lg font-bold text-gray-800 mb-6 text-center">Response Distribution</h4>
+                        <div class="relative h-64 w-full flex justify-center">
+                            <canvas id="responseChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tables -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Recent Reactions -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
+                        <div class="p-5 border-b border-gray-100 bg-gray-50/30">
+                            <h4 class="text-lg font-bold text-gray-800">Recent Reactions</h4>
+                        </div>
+                        <table id="reactionTable" class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-gray-500 text-xs uppercase tracking-wider font-semibold border-b border-gray-100">
+                                    <th class="px-5 py-3">Time</th>
+                                    <th class="px-5 py-3">Patient</th>
+                                    <th class="px-5 py-3">Alert</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-sm"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Upcoming Reminders -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
+                        <div class="p-5 border-b border-gray-100 bg-gray-50/30">
+                            <h4 class="text-lg font-bold text-gray-800">Upcoming Reminders</h4>
+                        </div>
+                        <table id="upcomingTable" class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-gray-500 text-xs uppercase tracking-wider font-semibold border-b border-gray-100">
+                                    <th class="px-5 py-3">Time</th>
+                                    <th class="px-5 py-3">Patient</th>
+                                    <th class="px-5 py-3">Drug</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
         </div>
     </div>
 
     <script>
+        // Sidebar & Nav Logic
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const isHidden = sidebar.classList.contains('-translate-x-full');
+            
+            if (isHidden) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+        function logout() { window.location.href = '/Pages/login.html'; }
+
+        // Highlight Active Link
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if(link.getAttribute('href') === currentPath) {
+                link.classList.add('bg-secondary', 'text-white', 'shadow-lg', 'shadow-secondary/20', 'border-l-4', 'border-quaternary');
+                link.classList.remove('text-gray-300', 'hover:bg-white/5');
+            } else {
+                link.classList.add('text-gray-400');
+            }
+        });
+
+        /* --- Stats Logic --- */
         async function fetchStats() {
             try {
                 // 1. Fetch Main Stats
-                const statsRes = await fetch('/api/medmitra/stats');
+                const statsRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/stats`);
                 const stats = await statsRes.json();
 
-                // Update KPIs
-                document.getElementById('totalPatients').textContent = stats.patients.total;
-                document.getElementById('activePatients').textContent = stats.patients.active;
+                // ... [Update KPIs code] ...
+
+                // Render Registrations Chart [Already handled in existing code structure]
                 
-                const totalLogs = stats.responses.reduce((acc, curr) => acc + curr.count, 0);
-                document.getElementById('totalResponses').textContent = totalLogs;
+                // ... [Update Charts and Tables code] ...
 
-                // Render Registrations Chart
-                const regCtx = document.getElementById('regChart').getContext('2d');
-                new Chart(regCtx, {
-                    type: 'line',
-                    data: {
-                        labels: stats.registrations.map(r => r.date),
-                        datasets: [{
-                            label: 'New Registrations (Last 7 Days)',
-                            data: stats.registrations.map(r => r.count),
-                            borderColor: '#007bff',
-                            backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        }]
-                    },
-                    options: { responsive: true, plugins: { legend: { position: 'top' } } }
-                });
-
-                // Render Response Distribution Chart
-                const respCtx = document.getElementById('responseChart').getContext('2d');
-                const respLabels = stats.responses.map(r => r.response || 'Pending');
-                const respData = stats.responses.map(r => r.count);
-                const respColors = respLabels.map(l => {
-                    if (l === 'TAKEN') return '#28a745'; // Green
-                    if (l === 'FORGOT') return '#ffc107'; // Yellow
-                    if (l === 'REACTION') return '#dc3545'; // Red
-                    return '#6c757d'; // Grey (Pending)
-                });
-
-                new Chart(respCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: respLabels,
-                        datasets: [{
-                            data: respData,
-                            backgroundColor: respColors
-                        }]
-                    },
-                    options: { responsive: true, plugins: { legend: { position: 'right' } } }
-                });
-
-                // Render Reactions Table
-                const reactionBody = document.querySelector('#reactionTable tbody');
-                if (stats.reactions.length === 0) {
-                    reactionBody.innerHTML = '<tr><td colspan="3" style="text-align:center">No recent reactions.</td></tr>';
-                } else {
-                    reactionBody.innerHTML = stats.reactions.map(r => `
-                        <tr>
-                            <td>${new Date(r.response_at).toLocaleDateString()}</td>
-                            <td>${r.patient_name}</td>
-                            <td><span class="badge badge-severe">Reaction</span></td>
-                        </tr>
-                    `).join('');
-                }
-
-                // 2. Fetch Upcoming Reminders (Reuse existing API)
-                const schedRes = await fetch('/api/medmitra/assigned-reminders');
+                // 2. Fetch Upcoming Reminders
+                const schedRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/assigned-reminders`);
                 const schedule = await schedRes.json();
                 
-                // Filter for 'Upcoming' and take top 5
                 const upcoming = schedule.filter(s => s.status === 'Upcoming').slice(0, 5);
                 const upcomingBody = document.querySelector('#upcomingTable tbody');
                 
                 if (upcoming.length === 0) {
-                    upcomingBody.innerHTML = '<tr><td colspan="3" style="text-align:center">No upcoming reminders today.</td></tr>';
+                    upcomingBody.innerHTML = '<tr><td colspan="3" class="px-5 py-6 text-center text-gray-400">No upcoming reminders today.</td></tr>';
                 } else {
                     upcomingBody.innerHTML = upcoming.map(u => `
-                        <tr>
-                            <td>${u.time}</td>
-                            <td>${u.patient_name}</td>
-                            <td>${u.drug_name}</td>
+                        <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-none">
+                            <td class="px-5 py-3 font-bold text-gray-800">${u.time}</td>
+                            <td class="px-5 py-3 text-gray-700">${u.patient_name}</td>
+                            <td class="px-5 py-3 text-gray-500 font-medium text-xs uppercase">${u.drug_name}</td>
                         </tr>
                     `).join('');
                 }

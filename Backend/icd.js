@@ -5,11 +5,17 @@ const router = express.Router();
 const CLIENT_ID = process.env.ICD_CLIENT_ID || '9e03852e-9a8c-462b-8937-fd4bca7acecc_74ce85a4-4867-460d-abd5-c7533c6c2068';
 const CLIENT_SECRET = process.env.ICD_CLIENT_SECRET || 'AiCMh8sEwpl3V7rMpy5lagPGPuV7F34EO8dSA1HtUdk=';
 const TOKEN_URL = 'https://icdaccessmanagement.who.int/connect/token';
-// Updated to MMS Release Endpoint
-const SEARCH_URL = 'https://id.who.int/icd/release/11/mms/search';
+// Verified Working Endpoint
+const SEARCH_URL = 'https://id.who.int/icd/entity/search';
 
 let accessToken = null;
 let tokenExpiresAt = 0;
+
+const fs = require('fs');
+
+function logICD(msg) {
+    fs.appendFileSync('icd_debug.log', `[${new Date().toISOString()}] ${msg}\n`);
+}
 
 // 1. Get OAuth Token
 async function getToken() {
@@ -18,6 +24,7 @@ async function getToken() {
     }
 
     try {
+        logICD('Fetching Token...');
         const body = new URLSearchParams();
         body.append('client_id', CLIENT_ID);
         body.append('client_secret', CLIENT_SECRET);
@@ -29,16 +36,17 @@ async function getToken() {
             body: body
         });
 
-        if (!res.ok) throw new Error('Token fetch failed: ' + res.status);
+        if (!res.ok) throw new Error('Token fetch failed: ' + res.status + ' ' + await res.text());
 
         const data = await res.json();
         accessToken = data.access_token;
-        // Expire slightly before actual time (3600s usually)
         tokenExpiresAt = Date.now() + (data.expires_in * 1000) - 60000;
         
+        logICD('Token Acquired');
         console.log('[ICD] New Token Acquired');
         return accessToken;
     } catch (e) {
+        logICD('Auth Error: ' + e.message);
         console.error('[ICD] Auth Error:', e);
         return null;
     }
@@ -49,6 +57,7 @@ router.get('/search', async (req, res) => {
     const query = req.query.q;
     if (!query) return res.json([]);
 
+    logICD('Search Request: ' + query);
     const token = await getToken();
     if (!token) return res.status(500).json({ error: 'ICD Auth Failed' });
 
@@ -59,14 +68,15 @@ router.get('/search', async (req, res) => {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/json',
-                'API-Version': 'v2'
+                'API-Version': 'v2',
+                'Accept-Language': 'en'
             }
         });
 
-        if (!apiRes.ok) throw new Error('Search failed: ' + apiRes.status);
+        if (!apiRes.ok) throw new Error('Search failed: ' + apiRes.status + ' ' + await apiRes.text());
 
         const data = await apiRes.json();
-        console.log('[ICD] Raw Response:', JSON.stringify(data).substring(0, 500)); // Log first 500 chars
+        // console.log('[ICD] Raw Response:', JSON.stringify(data).substring(0, 500)); 
         
         // Simplify result for frontend
         const results = data.destinationEntities ? data.destinationEntities.map(entity => ({

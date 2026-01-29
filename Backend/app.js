@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const cors = require('cors'); // Added CORS
 require('dotenv').config();
 
 const app = express();
@@ -8,9 +9,20 @@ const routes = require('./routes');
 const authRoutes = require('./auth');
 const adminRoutes = require('./admin');
 const rxnormRoutes = require('./rxnorm');
+const icdRoutes = require('./icd');
 const { authGuard, adminGuard } = require('./auth-middleware');
 
 // Middleware
+// Enable CORS for GitHub Pages and Local Development
+app.use(cors({
+    origin: [
+        'https://nilesh-12.github.io', // REPLACE THIS with your actual GitHub Pages URL
+        'http://127.0.0.1:5500',
+        'http://localhost:3000'
+    ],
+    credentials: true
+}));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
@@ -18,10 +30,12 @@ app.use(cookieParser());
 // Auth Routes (Public)
 app.use('/api/auth', authRoutes);
 
-// Public Static Files (Login)
-app.use('/login.html', express.static(path.join(__dirname, '../Pages/login.html')));
+// Public API routes
+app.get('/api/medmitra/bot-info', (req, res) => {
+    const { getBotUsername } = require('./bot');
+    res.json({ username: getBotUsername() });
+});
 
-// Protect everything else
 app.use(authGuard);
 
 // Admin Routes (Protected)
@@ -29,6 +43,9 @@ app.use('/api/admin', adminGuard, adminRoutes);
 
 // RxNorm/Formulary Routes (Protected)
 app.use('/api/medmitra/rxnorm', rxnormRoutes);
+
+// ICD Routes (Protected)
+app.use('/api/medmitra/icd', icdRoutes);
 
 // Protect Admin Page specifically
 app.get('/medmitra/admin_dashboard.html', adminGuard, (req, res, next) => {

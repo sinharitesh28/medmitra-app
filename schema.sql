@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS medmitra_enrollments (
     enrollment_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT UNIQUE,
     telegram_chat_id VARCHAR(50),
+    language VARCHAR(10) DEFAULT 'en',
+    complaint VARCHAR(255),
+    diagnosis VARCHAR(255),
     consent_status TINYINT(1) DEFAULT 0,
     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES master_patient_index(patient_id) ON DELETE CASCADE

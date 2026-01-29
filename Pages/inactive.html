@@ -5,82 +5,167 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedMitra - Inactive Patients</title>
     <script src="../Scripts/auth-guard.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="../Scripts/config.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#1B211A',
+                        secondary: '#628141',
+                        tertiary: '#8BAE66',
+                        quaternary: '#EBD5AB',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; }
-        header { background-color: #007bff; color: white; padding: 1rem; display: flex; align-items: center; padding-left: 2rem; }
-        .back-link { color: white; text-decoration: none; font-weight: bold; margin-right: 1rem; font-size: 1.2rem; }
-        h1 { margin: 0; font-size: 1.5rem; }
-        .container { max-width: 1000px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .medmitra-nav { background-color: #e9ecef; padding: 0.5rem 2rem; border-bottom: 1px solid #dee2e6; display: flex; gap: 1rem; }
-        .medmitra-nav a { text-decoration: none; color: #495057; padding: 0.5rem 1rem; border-radius: 4px; font-weight: 500; }
-        .medmitra-nav a:hover { background-color: #dee2e6; color: #007bff; }
-        .medmitra-nav a.active { background-color: #007bff; color: white; }
-
-        /* Search Bar */
-        .search-bar { margin-bottom: 1.5rem; display: flex; gap: 1rem; }
-        .search-bar input { flex: 1; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
-
-        /* Table Styles */
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { border: 1px solid #eee; padding: 1rem; text-align: left; }
-        th { background-color: #f8f9fa; font-weight: 600; color: #333; }
-        tr:nth-child(even) { background-color: #fcfcfc; }
-        tr:hover { background-color: #f1f1f1; }
-
-        .badge-warning { background-color: #fff3cd; color: #856404; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
-        .text-muted { color: #6c757d; font-style: italic; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        thead th { position: sticky; top: 0; z-index: 10; }
     </style>
 </head>
-<body>
-    <header>
-        <a href="/index.html" class="back-link">&larr;</a>
-        <h1>MedMitra</h1>
-    </header>
-    <nav class="medmitra-nav">
-        <a href="/medmitra/registration.html">Registration</a>
-        <a href="/medmitra/assigned.html">Assigned</a>
-        <a href="/medmitra/reminders.html">Reminders</a>
-        <a href="/medmitra/statistics.html">Statistics</a>
-        <a href="/medmitra/inactive.html" class="active">Inactive</a>
-        <a href="/medmitra/alerts.html">Alerts</a>
-    </nav>
-    <div class="container">
-        <h2>Inactive Patients</h2>
-        <p>Patients unresponsive for >24 hours with 3+ missed dosages.</p>
-        
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Search by Patient Name or OPD No..." onkeyup="filterTable()">
-        </div>
+<body class="bg-gray-50 font-sans text-gray-900">
 
-        <table id="inactiveTable">
-            <thead>
-                <tr>
-                    <th>Patient Name</th>
-                    <th>OPD No</th>
-                    <th>Contact</th>
-                    <th>Missed Dosages</th>
-                    <th>Last Active</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td colspan="5" style="text-align: center;">Loading...</td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="bg-primary text-gray-300 w-64 flex-shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 flex flex-col shadow-2xl">
+            <div class="h-20 flex items-center justify-center border-b border-gray-800/50 bg-primary/50 backdrop-blur-sm">
+                <h1 class="text-2xl font-bold tracking-widest text-quaternary flex items-center gap-3">
+                    <span class="text-3xl">⚕️</span> MedMitra
+                </h1>
+            </div>
+            <nav class="flex-1 px-4 py-8 space-y-2 overflow-y-auto no-scrollbar">
+                <a href="/medmitra/registration.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📝</span><span class="font-medium tracking-wide">Registration</span>
+                </a>
+                <a href="/medmitra/assigned.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📅</span><span class="font-medium tracking-wide">Assigned</span>
+                </a>
+                <a href="/medmitra/reminders.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">🔔</span><span class="font-medium tracking-wide">Reminders</span>
+                </a>
+                <a href="/medmitra/statistics.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📊</span><span class="font-medium tracking-wide">Statistics</span>
+                </a>
+                <a href="/medmitra/inactive.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">⚠️</span><span class="font-medium tracking-wide">Inactive</span>
+                </a>
+                <a href="/medmitra/alerts.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">🚨</span><span class="font-medium tracking-wide">Alerts</span>
+                </a>
+                <div class="my-4 border-t border-gray-800/50"></div>
+                <a href="/medmitra/admin_dashboard.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
+                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">⚙️</span><span class="font-medium tracking-wide">Admin</span>
+                </a>
+            </nav>
+            <div class="p-6 border-t border-gray-800/50">
+                <button onclick="logout()" class="w-full flex items-center justify-center px-4 py-3 bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white rounded-xl transition-all duration-200 text-sm font-semibold tracking-wide border border-transparent hover:border-red-500 shadow-sm">Sign Out</button>
+            </div>
+        </aside>
+
+        <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-primary/80 backdrop-blur-sm z-40 hidden md:hidden transition-opacity"></div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F3F4F6]">
+            <header class="bg-white/90 backdrop-blur-md border-b border-gray-200/60 h-20 flex items-center justify-between px-8 sticky top-0 z-30 shadow-sm">
+                <div class="flex items-center">
+                    <button onclick="toggleSidebar()" class="md:hidden text-gray-500 hover:text-primary focus:outline-none p-2 mr-4 transition-colors">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Inactive Patients</h2>
+                        <p class="text-xs text-gray-500 font-medium mt-0.5">High-risk adherence monitoring</p>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 scroll-smooth">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden flex flex-col h-[700px]">
+                    <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/30">
+                        <div class="w-full md:w-auto relative group">
+                             <input type="text" id="searchInput" placeholder="Search Patient or OPD..." onkeyup="filterTable()" 
+                                class="w-full md:w-72 pl-11 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm bg-white transition-all placeholder-gray-400">
+                             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                <span class="text-gray-400 group-focus-within:text-secondary transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                </span>
+                             </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                             <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                             <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Needs Attention</span>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-auto flex-1">
+                        <table id="inactiveTable" class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50/80 backdrop-blur-sm border-b border-gray-200">
+                                <tr class="text-gray-500 text-xs uppercase tracking-wider font-semibold">
+                                    <th class="px-6 py-4 font-bold text-gray-600">Patient Name</th>
+                                    <th class="px-6 py-4 font-bold text-gray-600">OPD No</th>
+                                    <th class="px-6 py-4 font-bold text-gray-600">Contact</th>
+                                    <th class="px-6 py-4 font-bold text-gray-600">Missed Dosages</th>
+                                    <th class="px-6 py-4 font-bold text-gray-600">Last Active</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 bg-white">
+                                <tr><td colspan="5" class="px-6 py-12 text-center text-gray-400 font-medium">Loading data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
 
     <script>
+        // Sidebar & Nav Logic
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const isHidden = sidebar.classList.contains('-translate-x-full');
+            
+            if (isHidden) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+        function logout() { window.location.href = '/Pages/login.html'; }
+
+        // Highlight Active Link
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if(link.getAttribute('href') === currentPath) {
+                link.classList.add('bg-secondary', 'text-white', 'shadow-lg', 'shadow-secondary/20', 'border-l-4', 'border-quaternary');
+                link.classList.remove('text-gray-300', 'hover:bg-white/5');
+            } else {
+                link.classList.add('text-gray-400');
+            }
+        });
+
+        /* --- Page Logic --- */
         let inactivePatients = [];
 
         async function fetchInactivePatients() {
             try {
-                const response = await fetch('/api/medmitra/inactive-patients');
+                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/inactive-patients`);
                 inactivePatients = await response.json();
                 renderTable(inactivePatients);
             } catch (error) {
                 console.error('Error fetching inactive patients:', error);
-                document.querySelector('#inactiveTable tbody').innerHTML = '<tr><td colspan="5" style="text-align:center; color: red;">Failed to load data.</td></tr>';
+                document.querySelector('#inactiveTable tbody').innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-red-500 font-medium">Failed to load data.</td></tr>';
             }
         }
 
@@ -89,20 +174,26 @@
             tbody.innerHTML = '';
 
             if (patients.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No inactive patients found.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500 font-medium">No inactive patients found.</td></tr>';
                 return;
             }
 
             patients.forEach(p => {
                 const tr = document.createElement('tr');
-                const lastActive = p.last_interaction ? new Date(p.last_interaction).toLocaleString() : '<span class="text-muted">Never</span>';
+                tr.className = "hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-none";
+                
+                const lastActive = p.last_interaction ? new Date(p.last_interaction).toLocaleString() : '<span class="text-gray-300 italic">Never</span>';
                 
                 tr.innerHTML = `
-                    <td>${p.patient_name}</td>
-                    <td>${p.opd_no}</td>
-                    <td>${p.contact_number || '-'}</td>
-                    <td><span class="badge-warning">${p.missed_count} Missed</span></td>
-                    <td>${lastActive}</td>
+                    <td class="px-6 py-4 font-bold text-gray-800">${p.patient_name}</td>
+                    <td class="px-6 py-4 text-gray-500 font-mono text-sm">${p.opd_no}</td>
+                    <td class="px-6 py-4 text-gray-600">${p.contact_number || '-'}</td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-yellow-50 text-yellow-700 border border-yellow-200">
+                            ${p.missed_count} Missed
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-600 text-sm font-medium">${lastActive}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -117,7 +208,6 @@
             renderTable(filtered);
         }
 
-        // Fetch on load
         fetchInactivePatients();
     </script>
 </body>
