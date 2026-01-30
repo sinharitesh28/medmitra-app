@@ -7,55 +7,74 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Force the job to see Repository Secrets
+    env:
+      GCP_HOST: ${{ secrets.GCP_HOST }}
+      GCP_USERNAME: ${{ secrets.GCP_USERNAME }}
+      GCP_SSH_KEY: ${{ secrets.GCP_SSH_KEY }}
+      ENV_FILE: ${{ secrets.ENV_FILE }}
+
     steps:
       - uses: actions/checkout@v3
 
-      - name: Verify Secrets
+      - name: Verify Secrets (Internal Check)
         run: |
-          echo "--- SECRET CHECK ---"
-          [ -z "${{ secrets.GCP_HOST }}" ] && echo "HOST: MISSING" || echo "HOST: OK"
-          [ -z "${{ secrets.GCP_USERNAME }}" ] && echo "USER: MISSING" || echo "USER: OK"
-          [ -z "${{ secrets.GCP_SSH_KEY }}" ] && echo "KEY: MISSING" || echo "KEY: OK"
-          if [ -z "${{ secrets.GCP_HOST }}" ] || [ -z "${{ secrets.GCP_USERNAME }}" ] || [ -z "${{ secrets.GCP_SSH_KEY }}" ]; then exit 1; fi
+          echo "--- Runner Environment Check ---"
+          if [ -z "$GCP_HOST" ]; then echo "HOST: ❌ MISSING"; else echo "HOST: ✅ OK"; fi
+          if [ -z "$GCP_USERNAME" ]; then echo "USER: ❌ MISSING"; else echo "USER: ✅ OK"; fi
+          if [ -z "$GCP_SSH_KEY" ]; then echo "KEY: ❌ MISSING"; else echo "KEY: ✅ OK"; fi
+          
+          # Print first 2 letters of user to verify it's not empty string
+          if [ ! -z "$GCP_USERNAME" ]; then
+            echo "User starts with: ${GCP_USERNAME:0:2}..."
+          fi
+          
+          if [ -z "$GCP_HOST" ] || [ -z "$GCP_USERNAME" ] || [ -z "$GCP_SSH_KEY" ]; then
+            echo "FATAL: Secrets are not accessible to the runner."
+            exit 1
+          fi
 
       - name: Create .env
-        run: echo "${{ secrets.ENV_FILE }}" > .env
+        run: echo "$ENV_FILE" > .env
 
-      - name: Pack
+      - name: Pack Application
         run: tar -czf deploy.tar.gz --exclude='node_modules' --exclude='*/node_modules' --exclude='.git' Backend nginx docker-compose.prod.yml package.json schema.sql init_auth.sql Dockerfile .env DEPLOYMENT_GUIDE.md SECURITY.md
 
-      - name: Clean & Deploy
+      - name: Remote Cleanup
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.GCP_HOST }}
-          username: ${{ secrets.GCP_USERNAME }}
-          key: ${{ secrets.GCP_SSH_KEY }}
+          host: ${{ env.GCP_HOST }}
+          username: ${{ env.GCP_USERNAME }}
+          key: ${{ env.GCP_SSH_KEY }}
           script: |
             mkdir -p ~/medmitra
             sudo docker ps -aq --filter name=medmitra | xargs -r sudo docker rm -f || true
             sudo docker system prune -af || true
             sudo rm -rf ~/medmitra/*
 
-      - name: Upload
+      - name: Upload Tarball
         uses: appleboy/scp-action@v0.1.4
         with:
-          host: ${{ secrets.GCP_HOST }}
-          username: ${{ secrets.GCP_USERNAME }}
-          key: ${{ secrets.GCP_SSH_KEY }}
+          host: ${{ env.GCP_HOST }}
+          username: ${{ env.GCP_USERNAME }}
+          key: ${{ env.GCP_SSH_KEY }}
           source: "deploy.tar.gz"
           target: "~/medmitra"
 
-      - name: Start
+      - name: Extract & Launch
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.GCP_HOST }}
-          username: ${{ secrets.GCP_USERNAME }}
-          key: ${{ secrets.GCP_SSH_KEY }}
+          host: ${{ env.GCP_HOST }}
+          username: ${{ env.GCP_USERNAME }}
+          key: ${{ env.GCP_SSH_KEY }}
           script: |
             cd ~/medmitra
             tar -xzf deploy.tar.gz
+            # Create Nginx Config
             printf "server {\n    listen 80;\n    server_name 136-116-93-95.sslip.io;\n    return 301 https://$host$request_uri;\n}\n\nserver {\n    listen 443 ssl;\n    server_name 136-116-93-95.sslip.io;\n\n    ssl_certificate /etc/letsencrypt/live/136-116-93-95.sslip.io/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/136-116-93-95.sslip.io/privkey.pem;\n\n    location / {\n        proxy_pass http://localhost:3000;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }\n}\n" > medmitra_site.conf
             sudo cp medmitra_site.conf /etc/nginx/sites-available/medmitra
             sudo ln -sf /etc/nginx/sites-available/medmitra /etc/nginx/sites-enabled/medmitra
             sudo nginx -t && sudo systemctl restart nginx
+            # Start Containers
             sudo docker-compose -f docker-compose.prod.yml up --build -d
+            sudo docker ps
