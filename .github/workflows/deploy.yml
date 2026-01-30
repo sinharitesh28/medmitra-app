@@ -1,4 +1,4 @@
-name: Deploy to Google Cloud (Pre-Cleanup Enabled)
+name: Deploy to Google Cloud (Clean Slate)
 
 on:
   push:
@@ -33,33 +33,37 @@ jobs:
           DEPLOYMENT_GUIDE.md \
           SECURITY.md
         
-        echo "Tarball size:"
+        echo "Tarball created. Size:"
         ls -lh deploy.tar.gz
 
-    # --- NEW STEP: EMERGENCY CLEANUP BEFORE COPY ---
-    - name: Emergency Server Cleanup
+    # --- STEP 1: STOP & CLEAN (Pre-Transfer) ---
+    - name: Stop Containers & Clean Server
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.GCP_HOST }}
         username: ${{ secrets.GCP_USERNAME }}
         key: ${{ secrets.GCP_SSH_KEY }}
-        command_timeout: 10m
+        command_timeout: 15m
         script: |
-          echo "--- EMERGENCY CLEANUP ---"
-          # Check Disk Usage
-          df -h
+          echo "--- 1. STOPPING SERVICES ---"
+          # Stop and remove any existing medmitra containers
+          sudo docker ps -q --filter name=medmitra | xargs -r sudo docker stop || true
+          sudo docker ps -aq --filter name=medmitra | xargs -r sudo docker rm -f || true
           
-          # Force remove old tarballs
-          rm -f ~/medmitra/deploy.tar.gz
-          
-          # Aggressive Docker Prune to free space for the new upload
-          echo "Pruning Docker..."
+          echo "--- 2. FREEING DISK SPACE ---"
+          # Prune images, networks, build cache
           sudo docker system prune -af --volumes || true
           
-          echo "Disk Space After Cleanup:"
-          df -h
+          echo "--- 3. PREPARING DIRECTORY ---"
+          # Ensure directory exists and is empty/clean
+          mkdir -p ~/medmitra
+          # Remove contents but keep directory
+          rm -rf ~/medmitra/*
+          
+          echo "Server prepared. Disk Space:"
+          df -h | grep -v 'loop|tmpfs'
 
-    # --- NOW WE COPY ---
+    # --- STEP 2: TRANSFER ---
     - name: Copy Tarball to Server
       uses: appleboy/scp-action@master
       with:
@@ -70,7 +74,8 @@ jobs:
         target: "~/medmitra"
         timeout: "120s"
 
-    - name: Deploy on Server
+    # --- STEP 3: START ---
+    - name: Extract & Start
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.GCP_HOST }}
@@ -79,23 +84,13 @@ jobs:
         command_timeout: 40m
         script: |
           export PATH=$PATH:/usr/local/bin
-          
-          echo "--- 1. PRE-CHECK ---"
-          mkdir -p ~/medmitra
           cd ~/medmitra
+          
+          echo "--- 4. EXTRACTING ---"
+          tar -xzf deploy.tar.gz
+          rm deploy.tar.gz
 
-          echo "--- 2. EXTRACT ---"
-          if [ -f "deploy.tar.gz" ]; then
-            tar -xzf deploy.tar.gz
-            rm deploy.tar.gz
-            echo "Extraction complete."
-          else
-            echo "CRITICAL: deploy.tar.gz not found!"
-            exit 1
-          fi
-
-          echo "--- 3. SYSTEM PREP (Swap) ---"
-          # Create Swap if missing (prevents OOM kill)
+          echo "--- 5. SYSTEM PREP (Swap) ---"
           if ! swapon --show | grep -q "/swapfile"; then
               echo "Creating 2GB Swap..."
               sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
@@ -104,8 +99,8 @@ jobs:
               sudo swapon /swapfile
           fi
 
-          echo "--- 4. CONFIG & DEPLOY ---"
-          # Nginx Config
+          echo "--- 6. CONFIG & DEPLOY ---"
+          # Nginx Config (printf)
           printf "server {\n    listen 80;\n    server_name 136-116-93-95.sslip.io;\n    return 301 https://$host$request_uri;\n}\n\nserver {\n    listen 443 ssl;\n    server_name 136-116-93-95.sslip.io;\n\n    ssl_certificate /etc/letsencrypt/live/136-116-93-95.sslip.io/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/136-116-93-95.sslip.io/privkey.pem;\n\n    location / {\n        proxy_pass http://localhost:3000;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }\n}\n" > medmitra_site.conf
 
           sudo rm -f /etc/nginx/sites-enabled/default
@@ -113,8 +108,8 @@ jobs:
           sudo ln -sf /etc/nginx/sites-available/medmitra /etc/nginx/sites-enabled/medmitra
           sudo nginx -t && sudo systemctl restart nginx
 
-          # Docker Build & Up
-          echo "Building Container..."
+          echo "--- 7. DOCKER BUILD ---"
+          # Build with Swap support
           sudo docker-compose -f docker-compose.prod.yml up --build -d
           
           echo "--- DEPLOYMENT SUCCESSFUL ---"
