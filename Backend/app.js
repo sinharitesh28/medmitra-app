@@ -12,6 +12,14 @@ const rxnormRoutes = require('./rxnorm');
 const icdRoutes = require('./icd');
 const { authGuard, adminGuard } = require('./auth-middleware');
 
+// Database Connection Check
+const db = require('./DB/db');
+db.query('SELECT 1').then(() => {
+    console.log('[App] Database connected successfully.');
+}).catch(err => {
+    console.error('[App] Database connection failed:', err.message);
+});
+
 // Middleware
 // Enable CORS for GitHub Pages and Local Development
 app.use(cors({

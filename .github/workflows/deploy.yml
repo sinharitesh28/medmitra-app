@@ -37,6 +37,7 @@ jobs:
           key: ${{ env.GCP_SSH_KEY }}
           script: |
             mkdir -p ~/medmitra
+            sudo -n docker-compose -f ~/medmitra/docker-compose.prod.yml down -v || true
             sudo -n docker ps -aq --filter name=medmitra | xargs -r sudo -n docker rm -f || true
             sudo -n docker system prune -af --volumes || true
             rm -rf ~/medmitra/*
@@ -68,10 +69,12 @@ jobs:
             sudo -n ln -sf /etc/nginx/sites-available/medmitra /etc/nginx/sites-enabled/medmitra
             sudo -n nginx -t && sudo -n systemctl restart nginx
             
-            # Start Containers
-            sudo -n docker-compose -f docker-compose.prod.yml up --build -d
-            
-            # Wait for container to be ready
-            echo "Waiting for app to initialize..."
-            sleep 5
-            sudo -n docker ps
+          # Start Containers
+          sudo -n docker-compose -f docker-compose.prod.yml up --build -d
+          
+          echo "Waiting for startup..."
+          sleep 10
+          sudo -n docker ps
+          echo "--- APP LOGS ---"
+          sudo -n docker logs medmitra_app --tail 50
+
