@@ -7,7 +7,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Force the job to see Repository Secrets
     env:
       GCP_HOST: ${{ secrets.GCP_HOST }}
       GCP_USERNAME: ${{ secrets.GCP_USERNAME }}
@@ -17,20 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Verify Secrets (Internal Check)
+      - name: Verify Secrets
         run: |
-          echo "--- Runner Environment Check ---"
-          if [ -z "$GCP_HOST" ]; then echo "HOST: ❌ MISSING"; else echo "HOST: ✅ OK"; fi
-          if [ -z "$GCP_USERNAME" ]; then echo "USER: ❌ MISSING"; else echo "USER: ✅ OK"; fi
-          if [ -z "$GCP_SSH_KEY" ]; then echo "KEY: ❌ MISSING"; else echo "KEY: ✅ OK"; fi
-          
-          # Print first 2 letters of user to verify it's not empty string
-          if [ ! -z "$GCP_USERNAME" ]; then
-            echo "User starts with: ${GCP_USERNAME:0:2}..."
-          fi
-          
           if [ -z "$GCP_HOST" ] || [ -z "$GCP_USERNAME" ] || [ -z "$GCP_SSH_KEY" ]; then
-            echo "FATAL: Secrets are not accessible to the runner."
+            echo "❌ Required secrets are missing in GitHub Settings."
             exit 1
           fi
 
@@ -40,7 +29,7 @@ jobs:
       - name: Pack Application
         run: tar -czf deploy.tar.gz --exclude='node_modules' --exclude='*/node_modules' --exclude='.git' Backend nginx docker-compose.prod.yml package.json schema.sql init_auth.sql Dockerfile .env DEPLOYMENT_GUIDE.md SECURITY.md
 
-      - name: Remote Cleanup
+      - name: Stop & Clean Server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.GCP_HOST }}
@@ -52,7 +41,7 @@ jobs:
             sudo docker system prune -af || true
             sudo rm -rf ~/medmitra/*
 
-      - name: Upload Tarball
+      - name: Upload Application
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ env.GCP_HOST }}
@@ -77,4 +66,4 @@ jobs:
             sudo nginx -t && sudo systemctl restart nginx
             # Start Containers
             sudo docker-compose -f docker-compose.prod.yml up --build -d
-            sudo docker ps
+
