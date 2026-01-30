@@ -7,82 +7,55 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    # --- DIAGNOSTIC: Check if secrets are visible to the runner ---
-    - name: Debug Secrets Visibility
-      run: |
-        echo "Checking if secrets are defined in GitHub..."
-        [ -z "${{ secrets.GCP_HOST }}" ] && echo "❌ GCP_HOST is EMPTY" || echo "✅ GCP_HOST is SET"
-        [ -z "${{ secrets.GCP_USERNAME }}" ] && echo "❌ GCP_USERNAME is EMPTY" || echo "✅ GCP_USERNAME is SET"
-        [ -z "${{ secrets.GCP_SSH_KEY }}" ] && echo "❌ GCP_SSH_KEY is EMPTY" || echo "✅ GCP_SSH_KEY is SET"
-        if [ -z "${{ secrets.GCP_HOST }}" ] || [ -z "${{ secrets.GCP_USERNAME }}" ] || [ -z "${{ secrets.GCP_SSH_KEY }}" ]; then
-          echo "FATAL: One or more required secrets are missing in GitHub Settings."
-          exit 1
-        fi
+      - name: Verify Secrets
+        run: |
+          echo "--- SECRET CHECK ---"
+          [ -z "${{ secrets.GCP_HOST }}" ] && echo "HOST: MISSING" || echo "HOST: OK"
+          [ -z "${{ secrets.GCP_USERNAME }}" ] && echo "USER: MISSING" || echo "USER: OK"
+          [ -z "${{ secrets.GCP_SSH_KEY }}" ] && echo "KEY: MISSING" || echo "KEY: OK"
+          if [ -z "${{ secrets.GCP_HOST }}" ] || [ -z "${{ secrets.GCP_USERNAME }}" ] || [ -z "${{ secrets.GCP_SSH_KEY }}" ]; then exit 1; fi
 
-    - name: Create .env file
-      run: echo "${{ secrets.ENV_FILE }}" > .env
+      - name: Create .env
+        run: echo "${{ secrets.ENV_FILE }}" > .env
 
-    - name: Compress files
-      run: |
-        tar -czf deploy.tar.gz \
-          --exclude='node_modules' \
-          --exclude='*/node_modules' \
-          --exclude='.git' \
-          --exclude='.github' \
-          Backend nginx docker-compose.prod.yml package.json schema.sql init_auth.sql Dockerfile .env DEPLOYMENT_GUIDE.md SECURITY.md
+      - name: Pack
+        run: tar -czf deploy.tar.gz --exclude='node_modules' --exclude='*/node_modules' --exclude='.git' Backend nginx docker-compose.prod.yml package.json schema.sql init_auth.sql Dockerfile .env DEPLOYMENT_GUIDE.md SECURITY.md
 
-    # --- STEP 1: STOP & CLEAN ---
-    - name: Stop Containers & Clean
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        debug: true
-        host: ${{ secrets.GCP_HOST }}
-        username: ${{ secrets.GCP_USERNAME }}
-        key: ${{ secrets.GCP_SSH_KEY }}
-        script: |
-          echo "--- 1. STOPPING SERVICES ---"
-          sudo docker ps -q --filter name=medmitra | xargs -r sudo docker stop || true
-          sudo docker ps -aq --filter name=medmitra | xargs -r sudo docker rm -f || true
-          sudo docker system prune -af --volumes || true
-          sudo rm -rf ~/medmitra
-          mkdir -p ~/medmitra
+      - name: Clean & Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          script: |
+            mkdir -p ~/medmitra
+            sudo docker ps -aq --filter name=medmitra | xargs -r sudo docker rm -f || true
+            sudo docker system prune -af || true
+            sudo rm -rf ~/medmitra/*
 
-    # --- STEP 2: TRANSFER ---
-    - name: Copy Files
-      uses: appleboy/scp-action@v0.1.4
-      with:
-        debug: true
-        host: ${{ secrets.GCP_HOST }}
-        username: ${{ secrets.GCP_USERNAME }}
-        key: ${{ secrets.GCP_SSH_KEY }}
-        source: "deploy.tar.gz"
-        target: "~/medmitra"
+      - name: Upload
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          source: "deploy.tar.gz"
+          target: "~/medmitra"
 
-    # --- STEP 3: DEPLOY ---
-    - name: Extract & Start
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        debug: true
-        host: ${{ secrets.GCP_HOST }}
-        username: ${{ secrets.GCP_USERNAME }}
-        key: ${{ secrets.GCP_SSH_KEY }}
-        script: |
-          export PATH=$PATH:/usr/local/bin
-          cd ~/medmitra
-          tar -xzf deploy.tar.gz
-          
-          # Nginx Config
-          printf "server {\n    listen 80;\n    server_name 136-116-93-95.sslip.io;\n    return 301 https://$host$request_uri;\n}\n\nserver {\n    listen 443 ssl;\n    server_name 136-116-93-95.sslip.io;\n\n    ssl_certificate /etc/letsencrypt/live/136-116-93-95.sslip.io/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/136-116-93-95.sslip.io/privkey.pem;\n\n    location / {\n        proxy_pass http://localhost:3000;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }\n}\n" > medmitra_site.conf
-
-          sudo rm -f /etc/nginx/sites-enabled/default
-          sudo cp medmitra_site.conf /etc/nginx/sites-available/medmitra
-          sudo ln -sf /etc/nginx/sites-available/medmitra /etc/nginx/sites-enabled/medmitra
-          sudo nginx -t && sudo systemctl restart nginx
-
-          # Start App
-          sudo docker-compose -f docker-compose.prod.yml up --build -d
-          sudo docker ps
+      - name: Start
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          script: |
+            cd ~/medmitra
+            tar -xzf deploy.tar.gz
+            printf "server {\n    listen 80;\n    server_name 136-116-93-95.sslip.io;\n    return 301 https://$host$request_uri;\n}\n\nserver {\n    listen 443 ssl;\n    server_name 136-116-93-95.sslip.io;\n\n    ssl_certificate /etc/letsencrypt/live/136-116-93-95.sslip.io/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/136-116-93-95.sslip.io/privkey.pem;\n\n    location / {\n        proxy_pass http://localhost:3000;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }\n}\n" > medmitra_site.conf
+            sudo cp medmitra_site.conf /etc/nginx/sites-available/medmitra
+            sudo ln -sf /etc/nginx/sites-available/medmitra /etc/nginx/sites-enabled/medmitra
+            sudo nginx -t && sudo systemctl restart nginx
+            sudo docker-compose -f docker-compose.prod.yml up --build -d
