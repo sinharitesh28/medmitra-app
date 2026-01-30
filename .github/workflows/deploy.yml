@@ -1,4 +1,4 @@
-name: Deploy to Google Cloud (Final Fix)
+name: Deploy to Google Cloud (Pre-Cleanup Enabled)
 
 on:
   push:
@@ -16,7 +16,6 @@ jobs:
 
     - name: Compress files (Strictly Exclude node_modules)
       run: |
-        # Create tarball excluding all node_modules at any level
         tar -czf deploy.tar.gz \
           --exclude='node_modules' \
           --exclude='*/node_modules' \
@@ -37,6 +36,30 @@ jobs:
         echo "Tarball size:"
         ls -lh deploy.tar.gz
 
+    # --- NEW STEP: EMERGENCY CLEANUP BEFORE COPY ---
+    - name: Emergency Server Cleanup
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.GCP_HOST }}
+        username: ${{ secrets.GCP_USERNAME }}
+        key: ${{ secrets.GCP_SSH_KEY }}
+        command_timeout: 10m
+        script: |
+          echo "--- EMERGENCY CLEANUP ---"
+          # Check Disk Usage
+          df -h
+          
+          # Force remove old tarballs
+          rm -f ~/medmitra/deploy.tar.gz
+          
+          # Aggressive Docker Prune to free space for the new upload
+          echo "Pruning Docker..."
+          sudo docker system prune -af --volumes || true
+          
+          echo "Disk Space After Cleanup:"
+          df -h
+
+    # --- NOW WE COPY ---
     - name: Copy Tarball to Server
       uses: appleboy/scp-action@master
       with:
@@ -45,7 +68,7 @@ jobs:
         key: ${{ secrets.GCP_SSH_KEY }}
         source: "deploy.tar.gz"
         target: "~/medmitra"
-        timeout: "120s" # 2 minutes timeout for SCP (should be enough for small file)
+        timeout: "120s"
 
     - name: Deploy on Server
       uses: appleboy/ssh-action@master
@@ -60,8 +83,6 @@ jobs:
           echo "--- 1. PRE-CHECK ---"
           mkdir -p ~/medmitra
           cd ~/medmitra
-          echo "Connected to $(hostname). Disk Space:"
-          df -h | grep -v 'loop|tmpfs'
 
           echo "--- 2. EXTRACT ---"
           if [ -f "deploy.tar.gz" ]; then
@@ -73,7 +94,7 @@ jobs:
             exit 1
           fi
 
-          echo "--- 3. SYSTEM PREP (Swap & Prune) ---"
+          echo "--- 3. SYSTEM PREP (Swap) ---"
           # Create Swap if missing (prevents OOM kill)
           if ! swapon --show | grep -q "/swapfile"; then
               echo "Creating 2GB Swap..."
@@ -82,10 +103,6 @@ jobs:
               sudo mkswap /swapfile
               sudo swapon /swapfile
           fi
-          
-          # Prune to free disk space
-          echo "Pruning Docker system..."
-          sudo docker system prune -af --volumes || true
 
           echo "--- 4. CONFIG & DEPLOY ---"
           # Nginx Config
