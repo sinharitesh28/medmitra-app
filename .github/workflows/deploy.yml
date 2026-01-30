@@ -11,6 +11,22 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    # --- DIAGNOSTIC STEP ---
+    - name: Check Secrets Presence
+      run: |
+        echo "Checking for secrets..."
+        if [ -z "${{ secrets.GCP_SSH_KEY }}" ]; then
+          echo "ERROR: GCP_SSH_KEY is empty or missing!"
+        else
+          echo "OK: GCP_SSH_KEY is present."
+        fi
+        
+        if [ -z "${{ secrets.GCP_USERNAME }}" ]; then
+          echo "ERROR: GCP_USERNAME is empty or missing!"
+        else
+          echo "OK: GCP_USERNAME is present (Value: ${{ secrets.GCP_USERNAME }} )" # Username is safe to print usually, but masked if secret
+        fi
+
     - name: Create .env file locally
       run: echo "${{ secrets.ENV_FILE }}" > .env
 
@@ -39,7 +55,7 @@ jobs:
     - name: Stop Containers & Clean Server
       uses: appleboy/ssh-action@master
       with:
-        host: "136.116.93.95"
+        host: "136.116.93.95" # Hardcoded for debug
         username: ${{ secrets.GCP_USERNAME }}
         key: ${{ secrets.GCP_SSH_KEY }}
         command_timeout: 15m
@@ -59,7 +75,7 @@ jobs:
     - name: Copy Tarball to Server
       uses: appleboy/scp-action@master
       with:
-        host: "136.116.93.95"
+        host: "136.116.93.95" # Hardcoded for debug
         username: ${{ secrets.GCP_USERNAME }}
         key: ${{ secrets.GCP_SSH_KEY }}
         source: "deploy.tar.gz"
@@ -70,7 +86,7 @@ jobs:
     - name: Extract & Start
       uses: appleboy/ssh-action@master
       with:
-        host: "136.116.93.95"
+        host: "136.116.93.95" # Hardcoded for debug
         username: ${{ secrets.GCP_USERNAME }}
         key: ${{ secrets.GCP_SSH_KEY }}
         command_timeout: 40m
