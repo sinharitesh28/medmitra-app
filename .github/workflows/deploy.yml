@@ -1,4 +1,4 @@
-name: Deploy to Google Cloud (Tarball & Swap)
+name: Deploy to Google Cloud (Final Fix)
 
 on:
   push:
@@ -14,12 +14,15 @@ jobs:
     - name: Create .env file locally
       run: echo "${{ secrets.ENV_FILE }}" > .env
 
-    - name: Compress files (Exclude node_modules)
+    - name: Compress files (Strictly Exclude node_modules)
       run: |
+        # Create tarball excluding all node_modules at any level
         tar -czf deploy.tar.gz \
           --exclude='node_modules' \
+          --exclude='*/node_modules' \
           --exclude='.git' \
           --exclude='.github' \
+          --exclude='*.log' \
           Backend \
           nginx \
           docker-compose.prod.yml \
@@ -30,6 +33,9 @@ jobs:
           .env \
           DEPLOYMENT_GUIDE.md \
           SECURITY.md
+        
+        echo "Tarball size:"
+        ls -lh deploy.tar.gz
 
     - name: Copy Tarball to Server
       uses: appleboy/scp-action@master
@@ -39,6 +45,7 @@ jobs:
         key: ${{ secrets.GCP_SSH_KEY }}
         source: "deploy.tar.gz"
         target: "~/medmitra"
+        timeout: "120s" # 2 minutes timeout for SCP (should be enough for small file)
 
     - name: Deploy on Server
       uses: appleboy/ssh-action@master
@@ -50,48 +57,48 @@ jobs:
         script: |
           export PATH=$PATH:/usr/local/bin
           
-          # Create directory if missing
+          echo "--- 1. PRE-CHECK ---"
           mkdir -p ~/medmitra
           cd ~/medmitra
-          
-          # Extract Files
-          echo "Extracting files..."
-          tar -xzf deploy.tar.gz
-          rm deploy.tar.gz
+          echo "Connected to $(hostname). Disk Space:"
+          df -h | grep -v 'loop|tmpfs'
 
-          # --- 1. ENABLE SWAP (Crucial for Build) ---
-          echo "Checking Swap..."
+          echo "--- 2. EXTRACT ---"
+          if [ -f "deploy.tar.gz" ]; then
+            tar -xzf deploy.tar.gz
+            rm deploy.tar.gz
+            echo "Extraction complete."
+          else
+            echo "CRITICAL: deploy.tar.gz not found!"
+            exit 1
+          fi
+
+          echo "--- 3. SYSTEM PREP (Swap & Prune) ---"
+          # Create Swap if missing (prevents OOM kill)
           if ! swapon --show | grep -q "/swapfile"; then
-              echo "Creating 2GB Swapfile..."
+              echo "Creating 2GB Swap..."
               sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
               sudo chmod 600 /swapfile
               sudo mkswap /swapfile
               sudo swapon /swapfile
-              echo "/swapfile none swap sw 0 0" | sudo tee -a /etc/fstab
-          else
-              echo "Swap already active."
           fi
-          free -m
-
-          # --- 2. CLEANUP ---
-          echo "Pruning Docker..."
+          
+          # Prune to free disk space
+          echo "Pruning Docker system..."
           sudo docker system prune -af --volumes || true
 
-          # --- 3. NGINX CONFIG ---
-          # Create Nginx Config (Using printf)
+          echo "--- 4. CONFIG & DEPLOY ---"
+          # Nginx Config
           printf "server {\n    listen 80;\n    server_name 136-116-93-95.sslip.io;\n    return 301 https://$host$request_uri;\n}\n\nserver {\n    listen 443 ssl;\n    server_name 136-116-93-95.sslip.io;\n\n    ssl_certificate /etc/letsencrypt/live/136-116-93-95.sslip.io/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/136-116-93-95.sslip.io/privkey.pem;\n\n    location / {\n        proxy_pass http://localhost:3000;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }\n}\n" > medmitra_site.conf
 
-          echo "Applying Nginx Config..."
           sudo rm -f /etc/nginx/sites-enabled/default
           sudo cp medmitra_site.conf /etc/nginx/sites-available/medmitra
           sudo ln -sf /etc/nginx/sites-available/medmitra /etc/nginx/sites-enabled/medmitra
           sudo nginx -t && sudo systemctl restart nginx
 
-          # --- 4. BUILD & DEPLOY ---
-          echo "Starting Build..."
-          sudo docker ps -a -q --filter name=medmitra | xargs -r sudo docker rm -f || true
-          
-          # Build with Swap support
+          # Docker Build & Up
+          echo "Building Container..."
           sudo docker-compose -f docker-compose.prod.yml up --build -d
           
+          echo "--- DEPLOYMENT SUCCESSFUL ---"
           sudo docker ps
