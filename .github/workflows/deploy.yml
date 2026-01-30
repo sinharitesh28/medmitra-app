@@ -39,6 +39,7 @@ jobs:
     - name: Stop Containers & Clean
       uses: appleboy/ssh-action@v1.0.3
       with:
+        debug: true
         host: ${{ secrets.GCP_HOST }}
         username: ${{ secrets.GCP_USERNAME }}
         key: ${{ secrets.GCP_SSH_KEY }}
@@ -54,6 +55,7 @@ jobs:
     - name: Copy Files
       uses: appleboy/scp-action@v0.1.4
       with:
+        debug: true
         host: ${{ secrets.GCP_HOST }}
         username: ${{ secrets.GCP_USERNAME }}
         key: ${{ secrets.GCP_SSH_KEY }}
@@ -64,6 +66,7 @@ jobs:
     - name: Extract & Start
       uses: appleboy/ssh-action@v1.0.3
       with:
+        debug: true
         host: ${{ secrets.GCP_HOST }}
         username: ${{ secrets.GCP_USERNAME }}
         key: ${{ secrets.GCP_SSH_KEY }}
