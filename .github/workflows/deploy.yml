@@ -11,14 +11,15 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    # --- STEP 1: VERIFY SECRETS ---
-    - name: Verify Secrets
+    # --- DIAGNOSTIC: Check if secrets are visible to the runner ---
+    - name: Debug Secrets Visibility
       run: |
-        echo "Verifying Secrets..."
-        [ -z "${{ secrets.GCP_HOST }}" ] && echo "❌ GCP_HOST MISSING" || echo "✅ GCP_HOST OK"
-        [ -z "${{ secrets.GCP_USERNAME }}" ] && echo "❌ GCP_USERNAME MISSING" || echo "✅ GCP_USERNAME OK"
-        [ -z "${{ secrets.GCP_SSH_KEY }}" ] && echo "❌ GCP_SSH_KEY MISSING" || echo "✅ GCP_SSH_KEY OK"
+        echo "Checking if secrets are defined in GitHub..."
+        [ -z "${{ secrets.GCP_HOST }}" ] && echo "❌ GCP_HOST is EMPTY" || echo "✅ GCP_HOST is SET"
+        [ -z "${{ secrets.GCP_USERNAME }}" ] && echo "❌ GCP_USERNAME is EMPTY" || echo "✅ GCP_USERNAME is SET"
+        [ -z "${{ secrets.GCP_SSH_KEY }}" ] && echo "❌ GCP_SSH_KEY is EMPTY" || echo "✅ GCP_SSH_KEY is SET"
         if [ -z "${{ secrets.GCP_HOST }}" ] || [ -z "${{ secrets.GCP_USERNAME }}" ] || [ -z "${{ secrets.GCP_SSH_KEY }}" ]; then
+          echo "FATAL: One or more required secrets are missing in GitHub Settings."
           exit 1
         fi
 
@@ -34,7 +35,7 @@ jobs:
           --exclude='.github' \
           Backend nginx docker-compose.prod.yml package.json schema.sql init_auth.sql Dockerfile .env DEPLOYMENT_GUIDE.md SECURITY.md
 
-    # --- STEP 2: CLEAN SERVER ---
+    # --- STEP 1: STOP & CLEAN ---
     - name: Stop Containers & Clean
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -49,7 +50,7 @@ jobs:
           sudo rm -rf ~/medmitra
           mkdir -p ~/medmitra
 
-    # --- STEP 3: TRANSFER ---
+    # --- STEP 2: TRANSFER ---
     - name: Copy Files
       uses: appleboy/scp-action@v0.1.4
       with:
@@ -59,7 +60,7 @@ jobs:
         source: "deploy.tar.gz"
         target: "~/medmitra"
 
-    # --- STEP 4: DEPLOY ---
+    # --- STEP 3: DEPLOY ---
     - name: Extract & Start
       uses: appleboy/ssh-action@v1.0.3
       with:
