@@ -32,6 +32,8 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 
 // Public API routes
+app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
+
 app.get('/api/medmitra/bot-info', (req, res) => {
     const { getBotUsername } = require('./bot');
     res.json({ username: getBotUsername() });
