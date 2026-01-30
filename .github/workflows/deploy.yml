@@ -36,10 +36,11 @@ jobs:
           username: ${{ env.GCP_USERNAME }}
           key: ${{ env.GCP_SSH_KEY }}
           script: |
+            # Use sudo -n (non-interactive) to fail fast if passwordless sudo is not set up
             mkdir -p ~/medmitra
-            sudo docker ps -aq --filter name=medmitra | xargs -r sudo docker rm -f || true
-            sudo docker system prune -af || true
-            sudo rm -rf ~/medmitra/*
+            sudo -n docker ps -aq --filter name=medmitra | xargs -r sudo -n docker rm -f || true
+            sudo -n docker system prune -af --volumes || true
+            rm -rf ~/medmitra/*
 
       - name: Upload Application
         uses: appleboy/scp-action@v0.1.4
@@ -59,11 +60,14 @@ jobs:
           script: |
             cd ~/medmitra
             tar -xzf deploy.tar.gz
+            
             # Create Nginx Config
             printf "server {\n    listen 80;\n    server_name 136-116-93-95.sslip.io;\n    return 301 https://$host$request_uri;\n}\n\nserver {\n    listen 443 ssl;\n    server_name 136-116-93-95.sslip.io;\n\n    ssl_certificate /etc/letsencrypt/live/136-116-93-95.sslip.io/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/136-116-93-95.sslip.io/privkey.pem;\n\n    location / {\n        proxy_pass http://localhost:3000;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }\n}\n" > medmitra_site.conf
-            sudo cp medmitra_site.conf /etc/nginx/sites-available/medmitra
-            sudo ln -sf /etc/nginx/sites-available/medmitra /etc/nginx/sites-enabled/medmitra
-            sudo nginx -t && sudo systemctl restart nginx
+            
+            sudo -n cp medmitra_site.conf /etc/nginx/sites-available/medmitra
+            sudo -n ln -sf /etc/nginx/sites-available/medmitra /etc/nginx/sites-enabled/medmitra
+            sudo -n nginx -t && sudo -n systemctl restart nginx
+            
             # Start Containers
-            sudo docker-compose -f docker-compose.prod.yml up --build -d
-
+            sudo -n docker-compose -f docker-compose.prod.yml up --build -d
+            sudo -n docker ps
