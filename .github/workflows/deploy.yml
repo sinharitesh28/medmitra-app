@@ -55,13 +55,14 @@ jobs:
           sudo docker system prune -af --volumes || true
           
           echo "--- 3. PREPARING DIRECTORY ---"
-          # Ensure directory exists and is empty/clean
+          # Nuke directory with sudo to remove any root-owned files
+          sudo rm -rf ~/medmitra
+          
+          # Recreate directory as current user
           mkdir -p ~/medmitra
-          # Remove contents but keep directory
-          rm -rf ~/medmitra/*
           
           echo "Server prepared. Disk Space:"
-          df -h | grep -v 'loop|tmpfs'
+          df -h | grep -v 'loop\|tmpfs'
 
     # --- STEP 2: TRANSFER ---
     - name: Copy Tarball to Server
