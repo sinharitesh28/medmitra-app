@@ -1,5 +1,4 @@
 const express = require('express');
-// Deployment Version: 1.0.1 (CORS & Auth Fix)
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const cors = require('cors'); // Added CORS
