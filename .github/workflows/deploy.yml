@@ -27,7 +27,7 @@ jobs:
         run: echo "$ENV_FILE" > .env
 
       - name: Pack Application
-        run: tar -czf deploy.tar.gz --exclude='node_modules' --exclude='*/node_modules' --exclude='.git' Backend nginx docker-compose.prod.yml package.json schema.sql init_auth.sql Dockerfile .env DEPLOYMENT_GUIDE.md SECURITY.md
+        run: tar -czf deploy.tar.gz --exclude='node_modules' --exclude='*/node_modules' --exclude='.git' Backend Pages Scripts Styles nginx docker-compose.prod.yml package.json schema.sql init_auth.sql Dockerfile index.js .env DEPLOYMENT_GUIDE.md SECURITY.md
 
       - name: Stop & Clean Server
         uses: appleboy/ssh-action@v1.0.3

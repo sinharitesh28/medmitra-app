@@ -6,7 +6,7 @@ services:
     container_name: medmitra_app
     restart: always
     ports:
-      - "3002:3000"
+      - "3000:3000"
     environment:
       - PORT=3000
       - DB_HOST=db
