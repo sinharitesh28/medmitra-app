@@ -95,9 +95,13 @@ jobs:
             sudo -n ln -sf /etc/nginx/sites-available/medmitra /etc/nginx/sites-enabled/medmitra
             sudo -n nginx -t && sudo -n systemctl restart nginx
             
-            # Start Containers
-            sudo -n docker-compose -f docker-compose.prod.yml up --build -d
+            # Clean Docker Cache to prevent build errors
+            sudo -n docker builder prune -af || true
             
+            # Start Containers (Force Clean Build)
+            sudo -n docker-compose -f docker-compose.prod.yml build --no-cache app
+            sudo -n docker-compose -f docker-compose.prod.yml up -d
+
             echo "Waiting for startup..."
             sleep 10
             sudo -n docker ps
