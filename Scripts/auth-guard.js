@@ -10,26 +10,33 @@
             const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_BASE_URL) ? CONFIG.API_BASE_URL : '';
             
             const token = localStorage.getItem('auth_token');
+            console.log('[AuthGuard] Checking auth. Token exists:', !!token);
+            
             const headers = {};
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
+            console.log(`[AuthGuard] Fetching ${baseUrl}/api/auth/me`);
             const res = await fetch(`${baseUrl}/api/auth/me`, { 
                 credentials: 'include',
                 headers: headers 
             });
             
+            console.log('[AuthGuard] Response Status:', res.status);
+
             if (res.status === 401) {
+                console.warn('[AuthGuard] 401 Unauthorized. Redirecting to login.');
                 window.location.href = 'login.html';
                 return;
             }
             if (!res.ok) throw new Error('Auth check failed');
 
             const user = await res.json();
+            console.log('[AuthGuard] Auth success for:', user.email);
             updateUI(user);
         } catch (e) {
-            console.error('Auth Error:', e);
+            console.error('[AuthGuard] Error:', e);
             // Optional: Redirect to login if fetch fails completely
             // window.location.href = '/login.html';
         }

@@ -182,7 +182,15 @@
             sidebar.classList.toggle('-translate-x-full');
             overlay.classList.toggle('hidden');
         }
-        function logout() { window.location.href = '/Pages/login.html'; }
+        function logout() { 
+            localStorage.removeItem('auth_token');
+            window.location.href = '/Pages/login.html'; 
+        }
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem('auth_token');
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
 
         /* --- Application Logic --- */
         let pollingInterval = null;
@@ -202,7 +210,10 @@
             const list = document.getElementById(listId);
             if (term.length < 3) { list.classList.add('hidden'); return; }
             try {
-                const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/icd/search?q=${encodeURIComponent(term)}`, { credentials: 'include' });
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/icd/search?q=${encodeURIComponent(term)}`, { 
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
                 const data = await res.json();
                 if (Array.isArray(data) && data.length > 0) {
                     list.innerHTML = data.map(item => `<li onclick="selectICD('${item.title}', '${item.code}', '${listId}', '${input.id}', '${codeId}')" class="px-5 py-3 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-none"><div>${item.title}</div><div class="text-xs text-gray-400 font-mono">${item.code}</div></li>`).join('');
@@ -217,8 +228,14 @@
             if (term.length < 2) { list.classList.add('hidden'); return; }
             try {
                 const [localRes, globalRes] = await Promise.all([
-                    fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/formulary?q=${encodeURIComponent(term)}`, { credentials: 'include' }),
-                    fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/search?q=${encodeURIComponent(term)}`, { credentials: 'include' })
+                    fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/formulary?q=${encodeURIComponent(term)}`, { 
+                        credentials: 'include',
+                        headers: getAuthHeaders()
+                    }),
+                    fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/search?q=${encodeURIComponent(term)}`, { 
+                        credentials: 'include',
+                        headers: getAuthHeaders()
+                    })
                 ]);
                 const localData = await localRes.json();
                 const globalData = await globalRes.json();
@@ -258,7 +275,10 @@
             hidden.value = rxcui;
             list.classList.add('hidden');
             try {
-                const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/details/${rxcui}`, { credentials: 'include' });
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/details/${rxcui}`, { 
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
                 const data = await res.json();
                 if (data.available_doses) doseList.innerHTML = data.available_doses.map(d => `<option value="${d}">`).join('');
             } catch (e) { console.error(e); }
@@ -283,12 +303,20 @@
             }
             const data = { opdNo, patientName: document.getElementById('patientName').value, contactNumber: document.getElementById('contactNumber').value, complaint: document.getElementById('complaint').value, complaintCode: document.getElementById('complaintCode').value, diagnosis: document.getElementById('diagnosis').value, diagnosisCode: document.getElementById('diagnosisCode').value, language: document.getElementById('language').value, therapies };
             try {
-                const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), credentials: 'include' });
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/register`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, 
+                    body: JSON.stringify(data), 
+                    credentials: 'include' 
+                });
                 if (res.ok) {
                     qrContainer.classList.remove('hidden');
                     new QRCode(qrCodeDiv, { text: `https://t.me/${botUsername}?start=${opdNo}`, width: 180, height: 180 });
                     pollingInterval = setInterval(async () => {
-                        const check = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/check-consent/${encodeURIComponent(opdNo)}`, { credentials: 'include' });
+                        const check = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/check-consent/${encodeURIComponent(opdNo)}`, { 
+                            credentials: 'include',
+                            headers: getAuthHeaders()
+                        });
                         const checkData = await check.json();
                         if (checkData.consent) {
                             clearInterval(pollingInterval);
