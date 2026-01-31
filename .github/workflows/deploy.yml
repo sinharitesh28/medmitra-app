@@ -37,7 +37,7 @@ jobs:
           key: ${{ env.GCP_SSH_KEY }}
           script: |
             mkdir -p ~/medmitra
-            sudo -n docker-compose -f ~/medmitra/docker-compose.prod.yml down -v || true
+            sudo -n docker-compose -f ~/medmitra/docker-compose.prod.yml down || true
             sudo -n docker ps -aq --filter name=medmitra | xargs -r sudo -n docker rm -f || true
             sudo -n docker system prune -af --volumes || true
             rm -rf ~/medmitra/*
