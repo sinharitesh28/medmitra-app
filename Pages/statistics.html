@@ -178,7 +178,15 @@
                 setTimeout(() => overlay.classList.add('hidden'), 300);
             }
         }
-        function logout() { window.location.href = 'login.html'; }
+        function logout() { 
+            localStorage.removeItem('auth_token');
+            window.location.href = 'login.html'; 
+        }
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem('auth_token');
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
 
         // Highlight Active Link
         const currentPath = window.location.pathname;
@@ -195,7 +203,11 @@
         async function fetchStats() {
             try {
                 // 1. Fetch Main Stats
-                const statsRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/stats`, { credentials: 'include' });
+                const statsRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/stats`, { 
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                if (statsRes.status === 401) { logout(); return; }
                 const stats = await statsRes.json();
 
                 // ... [Update KPIs code] ...
@@ -205,7 +217,10 @@
                 // ... [Update Charts and Tables code] ...
 
                 // 2. Fetch Upcoming Reminders
-                const schedRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/assigned-reminders`, { credentials: 'include' });
+                const schedRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/assigned-reminders`, { 
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
                 const schedule = await schedRes.json();
                 
                 const upcoming = schedule.filter(s => s.status === 'Upcoming').slice(0, 5);

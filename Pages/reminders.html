@@ -141,7 +141,15 @@
                 setTimeout(() => overlay.classList.add('hidden'), 300);
             }
         }
-        function logout() { window.location.href = 'login.html'; }
+        function logout() { 
+            localStorage.removeItem('auth_token');
+            window.location.href = 'login.html'; 
+        }
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem('auth_token');
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
 
         // Highlight Active Link
         const currentPath = window.location.pathname;
@@ -159,7 +167,14 @@
 
         async function fetchLogs() {
             try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/logs`, { credentials: 'include' });
+                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/logs`, { 
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                if (response.status === 401) {
+                    logout();
+                    return;
+                }
                 allLogs = await response.json();
                 renderTable(allLogs);
             } catch (error) {
