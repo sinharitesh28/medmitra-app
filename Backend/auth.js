@@ -147,7 +147,7 @@ router.post('/verify-otp', async (req, res) => {
             path: '/'
         });
 
-        res.json({ success: true, role: user.role });
+        res.json({ success: true, role: user.role, token: token });
 
     } catch (e) {
         console.error('[Auth] Verify Error:', e);

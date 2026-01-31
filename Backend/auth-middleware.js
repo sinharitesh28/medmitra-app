@@ -21,7 +21,12 @@ const authGuard = (req, res, next) => {
         return next();
     }
 
-    const token = req.cookies.auth_token;
+    let token = req.cookies.auth_token;
+
+    // Fallback to Authorization Header
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+        token = req.headers.authorization.split(' ')[1];
+    }
 
     if (!token) {
         // If API request, return 401

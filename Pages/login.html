@@ -171,6 +171,11 @@
                 }
 
                 if (res.ok) {
+                    // Save Token for fallback
+                    if (data.token) {
+                        localStorage.setItem('auth_token', data.token);
+                    }
+                    
                     msg.textContent = 'Login successful! Redirecting...';
                     msg.className = 'mt-6 text-center text-sm font-medium text-secondary bg-green-50 py-2 rounded-lg border border-green-100';
                     setTimeout(() => {

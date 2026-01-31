@@ -8,7 +8,18 @@
         try {
             // Ensure CONFIG is loaded
             const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_BASE_URL) ? CONFIG.API_BASE_URL : '';
-            const res = await fetch(`${baseUrl}/api/auth/me`, { credentials: 'include' });
+            
+            const token = localStorage.getItem('auth_token');
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const res = await fetch(`${baseUrl}/api/auth/me`, { 
+                credentials: 'include',
+                headers: headers 
+            });
+            
             if (res.status === 401) {
                 window.location.href = 'login.html';
                 return;
@@ -68,6 +79,7 @@
             document.getElementById('logoutBtn').onclick = async () => {
                 const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_BASE_URL) ? CONFIG.API_BASE_URL : '';
                 await fetch(`${baseUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+                localStorage.removeItem('auth_token'); // Clear Token
                 window.location.href = 'login.html';
             };
         }
