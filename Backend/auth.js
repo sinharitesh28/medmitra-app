@@ -141,7 +141,8 @@ router.post('/verify-otp', async (req, res) => {
         // Set Cookie
         res.cookie('auth_token', token, {
             httpOnly: true,
-            secure: false, // Set to true if using HTTPS
+            secure: true, // Required for SameSite=None
+            sameSite: 'None', // Required for Cross-Origin (GitHub Pages -> GCP)
             maxAge: 12 * 60 * 60 * 1000, // 12 Hours
             path: '/'
         });
