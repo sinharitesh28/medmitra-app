@@ -85,28 +85,6 @@ jobs:
                     proxy_set_header X-Forwarded-Proto $scheme;
                     proxy_connect_timeout 60s;
                     proxy_read_timeout 60s;
-
-                    # CORS Fix: Hide Upstream Headers and Add Nginx Headers
-                    proxy_hide_header Access-Control-Allow-Origin;
-                    
-                    if ($http_origin ~* "(https://sinharitesh28\.github\.io|http://localhost|http://127\.0\.0\.1)") {
-                        add_header Access-Control-Allow-Origin "$http_origin" always;
-                        add_header Access-Control-Allow-Credentials "true" always;
-                        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE" always;
-                        add_header Access-Control-Allow-Headers "Authorization, Content-Type, X-Requested-With" always;
-                    }
-
-                    if ($request_method = 'OPTIONS') {
-                        if ($http_origin ~* "(https://sinharitesh28\.github\.io|http://localhost|http://127\.0\.0\.1)") {
-                            add_header Access-Control-Allow-Origin "$http_origin" always;
-                            add_header Access-Control-Allow-Credentials "true" always;
-                            add_header Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE" always;
-                            add_header Access-Control-Allow-Headers "Authorization, Content-Type, X-Requested-With" always;
-                            add_header Content-Length 0;
-                            add_header Content-Type text/plain;
-                            return 204;
-                        }
-                    }
                 }
             }
             EOF
