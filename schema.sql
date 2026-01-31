@@ -62,5 +62,5 @@ CREATE TABLE IF NOT EXISTS system_users (
 
 -- Seed Super Admin
 INSERT INTO system_users (email, telegram_chat_id, name, role, status)
-VALUES ('ritesh.sinha37738@paruluniversity.ac.in', '-447215316', 'Ritesh Sinha', 'SUPER_ADMIN', 'ACTIVE')
-ON DUPLICATE KEY UPDATE role='SUPER_ADMIN', telegram_chat_id='-447215316';
+VALUES ('ritesh.sinha37738@paruluniversity.ac.in', '-447215316', 'Dr. Ritesh Sinha', 'SUPER_ADMIN', 'ACTIVE')
+ON DUPLICATE KEY UPDATE name='Dr. Ritesh Sinha', role='SUPER_ADMIN', telegram_chat_id='-447215316';
