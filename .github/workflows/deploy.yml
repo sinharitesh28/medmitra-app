@@ -63,9 +63,56 @@ jobs:
             tar -xzf deploy.tar.gz
             
             # Create Nginx Config (Using 127.0.0.1 instead of localhost for stability)
-            # Escaping $ for shell
-            printf "server {\n    listen 80;\n    server_name 136-116-93-95.sslip.io;\n    return 301 https://$host$request_uri;\n}\n\nserver {\n    listen 443 ssl;\n    server_name 136-116-93-95.sslip.io;\n\n    ssl_certificate /etc/letsencrypt/live/136-116-93-95.sslip.io/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/136-116-93-95.sslip.io/privkey.pem;\n\n    location / {\n        proxy_pass http://127.0.0.1:3000;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_connect_timeout 60s;\n        proxy_read_timeout 60s;\n    }\n}\n" > medmitra_site.conf
+            cat << 'EOF' > medmitra_site.conf
+            server {
+                listen 80;
+                server_name 136-116-93-95.sslip.io;
+                return 301 https://$host$request_uri;
+            }
+
+            server {
+                listen 443 ssl;
+                server_name 136-116-93-95.sslip.io;
+
+                ssl_certificate /etc/letsencrypt/live/136-116-93-95.sslip.io/fullchain.pem;
+                ssl_certificate_key /etc/letsencrypt/live/136-116-93-95.sslip.io/privkey.pem;
+
+                location / {
+                    proxy_pass http://127.0.0.1:3000;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    proxy_connect_timeout 60s;
+                    proxy_read_timeout 60s;
+
+                    # CORS Fix: Hide Upstream Headers and Add Nginx Headers
+                    proxy_hide_header Access-Control-Allow-Origin;
+                    
+                    if ($http_origin ~* "(https://sinharitesh28\.github\.io|http://localhost|http://127\.0\.0\.1)") {
+                        add_header Access-Control-Allow-Origin "$http_origin" always;
+                        add_header Access-Control-Allow-Credentials "true" always;
+                        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE" always;
+                        add_header Access-Control-Allow-Headers "Authorization, Content-Type, X-Requested-With" always;
+                    }
+
+                    if ($request_method = 'OPTIONS') {
+                        if ($http_origin ~* "(https://sinharitesh28\.github\.io|http://localhost|http://127\.0\.0\.1)") {
+                            add_header Access-Control-Allow-Origin "$http_origin" always;
+                            add_header Access-Control-Allow-Credentials "true" always;
+                            add_header Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE" always;
+                            add_header Access-Control-Allow-Headers "Authorization, Content-Type, X-Requested-With" always;
+                            add_header Content-Length 0;
+                            add_header Content-Type text/plain;
+                            return 204;
+                        }
+                    }
+                }
+            }
+            EOF
             
+            # Remove default config if exists
+            sudo -n rm -f /etc/nginx/sites-enabled/default
             sudo -n cp medmitra_site.conf /etc/nginx/sites-available/medmitra
             sudo -n ln -sf /etc/nginx/sites-available/medmitra /etc/nginx/sites-enabled/medmitra
             sudo -n nginx -t && sudo -n systemctl restart nginx
