@@ -88,30 +88,45 @@ router.get('/search', async (req, res) => {
     }
 });
 
-// 3. Get Details (Doses)
+// 3. Get Details (Doses & Ingredient)
 router.get('/details/:rxcui', async (req, res) => {
     const { rxcui } = req.params;
-    
+    let responseData = { available_doses: [], ingredient_name: null };
+
     // Check Formulary first
     const local = formulary.find(d => d.rxcui === rxcui);
-    if (local) {
-        return res.json({ available_doses: local.available_doses });
+    if (local && local.available_doses) {
+        responseData.available_doses = local.available_doses;
     }
 
     try {
-        // Fetch from RxNorm - Get related strength terms
-        // We use 'getAllProperties' or simply check the term name if it contains strength.
-        // Better: https://rxnav.nlm.nih.gov/REST/rxcui/{rxcui}/related?tty=SCDF+SBDF
-        // SCDF: Semantic Clinical Drug Form (contains strength)
-        
-        // This is complex for a simple demo.
-        // Simplified approach: Just return empty or fetch properties
-        // A better UX hack: Don't block. Let user type.
-        
-        res.json({ available_doses: [] }); // Fallback for now to avoid complex parsing logic
+        // Fetch Ingredient Name (IN) from RxNorm
+        // This is crucial for OpenFDA safety queries
+        const relatedRes = await fetch(`https://rxnav.nlm.nih.gov/REST/rxcui/${rxcui}/related.json?tty=IN`);
+        if (relatedRes.ok) {
+            const relatedData = await relatedRes.json();
+            const group = relatedData.relatedGroup.conceptGroup.find(g => g.tty === 'IN');
+            if (group && group.conceptProperties && group.conceptProperties.length > 0) {
+                responseData.ingredient_name = group.conceptProperties[0].name;
+            }
+        }
+
+        // Fetch Properties for exact name (fallback)
+        if (!responseData.ingredient_name) {
+            const propsRes = await fetch(`https://rxnav.nlm.nih.gov/REST/rxcui/${rxcui}/properties.json`);
+            if (propsRes.ok) {
+                const propsData = await propsRes.json();
+                if (propsData.properties) {
+                    responseData.ingredient_name = propsData.properties.name; // Use full name if ingredient not found
+                }
+            }
+        }
+
     } catch (e) {
-        res.json({ available_doses: [] });
+        console.error('[RxNorm] Details Error:', e);
     }
+    
+    res.json(responseData);
 });
 
 module.exports = router;

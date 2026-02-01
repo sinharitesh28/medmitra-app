@@ -385,6 +385,7 @@
             const safetyBtn = tr.querySelector('button[onclick="showSafetyInfo(this)"]');
             if (safetyBtn) {
                 safetyBtn.dataset.drugName = name;
+                safetyBtn.dataset.rxcui = rxcui; // Store RxCUI for accurate safety lookup
                 safetyBtn.disabled = false;
                 safetyBtn.classList.remove('text-gray-300');
                 safetyBtn.classList.add('text-red-500');
@@ -397,11 +398,19 @@
                 });
                 const data = await res.json();
                 if (data.available_doses) doseList.innerHTML = data.available_doses.map(d => `<option value="${d}">`).join('');
+                
+                // Pre-fetch ingredient name for safety modal if possible (optimization)
+                if (data.ingredient_name && safetyBtn) {
+                    safetyBtn.dataset.ingredient = data.ingredient_name;
+                }
             } catch (e) { console.error(e); }
         }
 
         async function showSafetyInfo(btn) {
             const drugName = btn.dataset.drugName;
+            const rxcui = btn.dataset.rxcui;
+            let searchTerm = btn.dataset.ingredient; // Use cached ingredient if available
+
             if (!drugName) return;
             
             const modal = document.getElementById('safety-modal');
@@ -413,23 +422,44 @@
             content.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div><p class="mt-2 text-sm text-gray-500">Querying OpenFDA...</p></div>';
 
             try {
-                const term = encodeURIComponent(drugName);
+                // If we don't have the ingredient name yet, try to get it
+                if (!searchTerm && rxcui && rxcui !== 'null' && rxcui !== 'undefined') {
+                     try {
+                        const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/details/${rxcui}`, { 
+                             credentials: 'include',
+                             headers: getAuthHeaders()
+                         });
+                         const data = await res.json();
+                         if (data.ingredient_name) searchTerm = data.ingredient_name;
+                     } catch (err) { console.warn("Failed to fetch ingredient details", err); }
+                }
+
+                // Fallback: If still no ingredient, use the raw name but clean it up
+                if (!searchTerm) {
+                    // Heuristic: Remove common dosage forms to improve "fuzzy" matching chances (though OpenFDA is strict)
+                    searchTerm = drugName.replace(/\s(TAB|CAP|SYP|INJ|DROPS|OINT|GEL|CREAM|LOTION|SOL|SUSP|15ML|10ML|5ML|100ML|500MG|100MG|50MG|10MG|5MG|1MG)\b/gi, '').trim();
+                }
+
+                const term = encodeURIComponent(searchTerm);
+                console.log(`[OpenFDA] Searching for: ${searchTerm}`);
+
                 // Parallel fetch for events and deaths
                 const [eventsRes, deathRes] = await Promise.all([
                     fetch(`https://api.fda.gov/drug/event.json?search=patient.drug.medicinalproduct:"${term}"&count=patient.reaction.reactionmeddrapt.exact&limit=5`),
                     fetch(`https://api.fda.gov/drug/event.json?search=patient.drug.medicinalproduct:"${term}"+AND+seriousnessdeath:1&count=patient.reaction.reactionmeddrapt.exact&limit=5`)
                 ]);
 
+                // Handle 404s gracefully (no data found)
                 const events = eventsRes.ok ? await eventsRes.json() : { results: [] };
                 const deaths = deathRes.ok ? await deathRes.json() : { results: [] };
 
-                renderSafetyModal(events.results, deaths.results);
+                renderSafetyModal(events.results, deaths.results, searchTerm);
             } catch (e) {
                 content.innerHTML = `<div class="text-center py-8 text-red-500"><p>Failed to load data from OpenFDA.</p><p class="text-xs text-gray-400 mt-1">${e.message}</p></div>`;
             }
         }
 
-        function renderSafetyModal(events, deaths) {
+        function renderSafetyModal(events, deaths, termUsed) {
             const content = document.getElementById('safety-content');
             
             const renderList = (items, emptyMsg, color) => {
@@ -448,6 +478,9 @@
 
             content.innerHTML = `
                 <div class="space-y-6">
+                    <div class="bg-blue-50 px-3 py-2 rounded-lg text-xs text-blue-700 mb-2">
+                        <strong>Search Term:</strong> ${termUsed}
+                    </div>
                     <div>
                         <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Most Reported Side Effects</h4>
                         <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
