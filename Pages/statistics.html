@@ -210,11 +210,85 @@
                 if (statsRes.status === 401) { logout(); return; }
                 const stats = await statsRes.json();
 
-                // ... [Update KPIs code] ...
-
-                // Render Registrations Chart [Already handled in existing code structure]
+                // Update KPIs
+                document.getElementById('totalPatients').innerText = stats.patients.total || 0;
+                document.getElementById('activePatients').innerText = stats.patients.active || 0;
                 
-                // ... [Update Charts and Tables code] ...
+                const responseCount = stats.responses.reduce((acc, curr) => acc + curr.count, 0);
+                document.getElementById('totalResponses').innerText = responseCount;
+
+                // Render Registrations Chart
+                const regCtx = document.getElementById('regChart').getContext('2d');
+                new Chart(regCtx, {
+                    type: 'line',
+                    data: {
+                        labels: stats.registrations.map(r => r.date),
+                        datasets: [{
+                            label: 'New Patients',
+                            data: stats.registrations.map(r => r.count),
+                            borderColor: '#628141',
+                            backgroundColor: 'rgba(98, 129, 65, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#628141'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } }
+                    }
+                });
+
+                // Render Response Distribution Chart
+                const respCtx = document.getElementById('responseChart').getContext('2d');
+                const labels = stats.responses.map(r => r.response);
+                const data = stats.responses.map(r => r.count);
+                // Color mapping
+                const colorMap = {
+                    'TAKEN': '#628141', // Secondary
+                    'FORGOT': '#F59E0B', // Orange
+                    'PENDING': '#E5E7EB', // Gray
+                    'REACTION': '#EF4444' // Red
+                };
+                const bgColors = labels.map(l => colorMap[l] || '#CBD5E1');
+
+                new Chart(respCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: bgColors,
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } }
+                    }
+                });
+
+                // Render Recent Reactions Table
+                const reactionBody = document.querySelector('#reactionTable tbody');
+                if (stats.reactions.length === 0) {
+                    reactionBody.innerHTML = '<tr><td colspan="3" class="px-5 py-6 text-center text-gray-400">No recent reactions reported.</td></tr>';
+                } else {
+                    reactionBody.innerHTML = stats.reactions.map(r => `
+                        <tr class="bg-red-50/30 hover:bg-red-50 transition-colors border-b border-red-50 last:border-none">
+                            <td class="px-5 py-3 text-gray-500 font-medium text-xs">${new Date(r.response_at).toLocaleDateString()}</td>
+                            <td class="px-5 py-3 font-bold text-gray-800">${r.patient_name}</td>
+                            <td class="px-5 py-3"><span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded uppercase tracking-wide">Reaction</span></td>
+                        </tr>
+                    `).join('');
+                }
 
                 // 2. Fetch Upcoming Reminders
                 const schedRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/assigned-reminders`, { 
