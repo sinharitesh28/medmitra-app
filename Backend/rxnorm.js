@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const formulary = require('./Data/formulary.json');
+const formulary = require('../formulary.json');
 
 // 1. Get Local Formulary
 router.get('/formulary', (req, res) => {
