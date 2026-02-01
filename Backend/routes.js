@@ -87,6 +87,28 @@ router.post('/register', async (req, res) => {
         const [enr] = await db.query("SELECT enrollment_id FROM medmitra_enrollments WHERE patient_id = ?", [pid]);
         const eid = enr[0].enrollment_id;
 
+        // Ensure Clinical Tables Exist (Self-Healing)
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS medmitra_complaints (
+                complaint_id INT AUTO_INCREMENT PRIMARY KEY,
+                enrollment_id INT,
+                title VARCHAR(255),
+                icd_code VARCHAR(50),
+                duration VARCHAR(50),
+                FOREIGN KEY (enrollment_id) REFERENCES medmitra_enrollments(enrollment_id) ON DELETE CASCADE
+            )
+        `);
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS medmitra_diagnoses (
+                diagnosis_id INT AUTO_INCREMENT PRIMARY KEY,
+                enrollment_id INT,
+                title VARCHAR(255),
+                icd_code VARCHAR(50),
+                duration VARCHAR(50),
+                FOREIGN KEY (enrollment_id) REFERENCES medmitra_enrollments(enrollment_id) ON DELETE CASCADE
+            )
+        `);
+
         // 1. Handle Complaints
         if (complaints && Array.isArray(complaints)) {
             await db.query("DELETE FROM medmitra_complaints WHERE enrollment_id = ?", [eid]);
