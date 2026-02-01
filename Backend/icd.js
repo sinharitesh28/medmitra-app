@@ -87,22 +87,17 @@ router.get('/search', async (req, res) => {
         
         const rawCount = data.destinationEntities ? data.destinationEntities.length : 0;
         
-        // Filter: Only include entities that HAVE a code (No "No Code" results)
+        // Filter: Allow all entities, handle missing codes gracefully
         const results = data.destinationEntities 
             ? data.destinationEntities
-                .filter(entity => {
-                    // Debug: Log if we are dropping a high-relevance item
-                    // if (!entity.theCode) console.log(`[ICD Filter] Dropped: ${entity.title}`);
-                    return entity.theCode && entity.theCode !== 'No Code' && entity.theCode.length > 0;
-                })
                 .map(entity => ({
                     title: entity.title.replace(/<[^>]*>?/gm, ''), 
-                    code: entity.theCode,
+                    code: entity.theCode && entity.theCode !== 'No Code' ? entity.theCode : 'N/A', // Fallback
                     id: entity.id
                 })) 
             : [];
 
-        console.log(`[ICD Search] Query: "${query}" | Raw: ${rawCount} | Filtered: ${results.length}`);
+        console.log(`[ICD Search] Query: "${query}" | Raw: ${rawCount} | Returned: ${results.length}`);
 
         res.json(results.slice(0, 15)); // Limit to top 15 for speed
 
