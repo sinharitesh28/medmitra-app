@@ -299,7 +299,13 @@
             const rows = document.getElementById('therapyTable').getElementsByTagName('tbody')[0].rows;
             for (let i = 0; i < rows.length; i++) {
                 const inputs = rows[i].getElementsByTagName('input');
-                therapies.push({ drug: inputs[0].value, dose: inputs[1].value, scheduleTimes: inputs[2].value.split(',').map(t => t.trim()), endDate: inputs[3].value });
+                // inputs[0]=Drug, inputs[1]=HiddenRXCUI, inputs[2]=Dose, inputs[3]=Schedule, inputs[4]=Date
+                therapies.push({ 
+                    drug: inputs[0].value, 
+                    dose: inputs[2].value, 
+                    scheduleTimes: inputs[3].value.split(',').map(t => t.trim()), 
+                    endDate: inputs[4].value 
+                });
             }
             const data = { opdNo, patientName: document.getElementById('patientName').value, contactNumber: document.getElementById('contactNumber').value, complaint: document.getElementById('complaint').value, complaintCode: document.getElementById('complaintCode').value, diagnosis: document.getElementById('diagnosis').value, diagnosisCode: document.getElementById('diagnosisCode').value, language: document.getElementById('language').value, therapies };
             try {
