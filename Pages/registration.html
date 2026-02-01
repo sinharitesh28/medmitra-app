@@ -218,8 +218,9 @@
             overlay.classList.toggle('hidden');
         }
         function logout() { 
+            console.log('Logging out...');
             localStorage.removeItem('auth_token');
-            window.location.href = 'login.html'; 
+            window.location.href = './login.html'; 
         }
 
         function getAuthHeaders() {
