@@ -5,8 +5,8 @@ const router = express.Router();
 const CLIENT_ID = process.env.ICD_CLIENT_ID || '9e03852e-9a8c-462b-8937-fd4bca7acecc_74ce85a4-4867-460d-abd5-c7533c6c2068';
 const CLIENT_SECRET = process.env.ICD_CLIENT_SECRET || 'AiCMh8sEwpl3V7rMpy5lagPGPuV7F34EO8dSA1HtUdk=';
 const TOKEN_URL = 'https://icdaccessmanagement.who.int/connect/token';
-// Verified Working Endpoint
-const SEARCH_URL = 'https://id.who.int/icd/entity/search';
+// Corrected Endpoint: Search within the MMS Linearization to get codes
+const SEARCH_URL = 'https://id.who.int/icd/release/11/2024-01/mms/search';
 
 let accessToken = null;
 let tokenExpiresAt = 0;
@@ -85,19 +85,14 @@ router.get('/search', async (req, res) => {
 
         const data = await apiRes.json();
         
-        const rawCount = data.destinationEntities ? data.destinationEntities.length : 0;
-        
-        // Filter: Allow all entities, handle missing codes gracefully
+        // Map results directly from MMS search
         const results = data.destinationEntities 
-            ? data.destinationEntities
-                .map(entity => ({
-                    title: entity.title.replace(/<[^>]*>?/gm, ''), 
-                    code: entity.theCode && entity.theCode !== 'No Code' ? entity.theCode : 'N/A', // Fallback
-                    id: entity.id
-                })) 
+            ? data.destinationEntities.map(entity => ({
+                title: entity.title.replace(/<[^>]*>?/gm, ''), 
+                code: entity.theCode || 'N/A', // Code should now be present
+                id: entity.id
+            })) 
             : [];
-
-        console.log(`[ICD Search] Query: "${query}" | Raw: ${rawCount} | Returned: ${results.length}`);
 
         res.json(results.slice(0, 15)); // Limit to top 15 for speed
 
