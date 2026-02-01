@@ -275,7 +275,8 @@
             div.className = "flex gap-3 relative animate-[fadeIn_0.2s_ease-out]";
             div.innerHTML = `
                 <div class="flex-1 relative">
-                    <input type="text" placeholder="${type === 'complaint' ? 'Symptom...' : 'Diagnosis...'}" 
+                    <input type="text" id="input-${type}-${id}" 
+                           placeholder="${type === 'complaint' ? 'Symptom...' : 'Diagnosis...'}" 
                            onkeyup="searchICD(this, 'list-${type}-${id}', 'code-${type}-${id}')" 
                            autocomplete="off" required 
                            class="clinical-title block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm transition-all">

@@ -69,8 +69,8 @@ router.get('/search', async (req, res) => {
     if (!token) return res.status(500).json({ error: 'ICD Auth Failed' });
 
     try {
-        // Optimized URL parameters
-        const url = `${SEARCH_URL}?q=${encodeURIComponent(query)}&useFlexisearch=true&flatResults=true`;
+        // Reverting to includeKeywordResult for better matching coverage
+        const url = `${SEARCH_URL}?q=${encodeURIComponent(query)}&useFlexisearch=true&includeKeywordResult=true`;
         
         const apiRes = await fetch(url, {
             headers: {
@@ -85,16 +85,24 @@ router.get('/search', async (req, res) => {
 
         const data = await apiRes.json();
         
+        const rawCount = data.destinationEntities ? data.destinationEntities.length : 0;
+        
         // Filter: Only include entities that HAVE a code (No "No Code" results)
         const results = data.destinationEntities 
             ? data.destinationEntities
-                .filter(entity => entity.theCode && entity.theCode !== 'No Code')
+                .filter(entity => {
+                    // Debug: Log if we are dropping a high-relevance item
+                    // if (!entity.theCode) console.log(`[ICD Filter] Dropped: ${entity.title}`);
+                    return entity.theCode && entity.theCode !== 'No Code' && entity.theCode.length > 0;
+                })
                 .map(entity => ({
                     title: entity.title.replace(/<[^>]*>?/gm, ''), 
                     code: entity.theCode,
                     id: entity.id
                 })) 
             : [];
+
+        console.log(`[ICD Search] Query: "${query}" | Raw: ${rawCount} | Filtered: ${results.length}`);
 
         res.json(results.slice(0, 15)); // Limit to top 15 for speed
 
