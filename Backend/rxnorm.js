@@ -3,18 +3,17 @@ const router = express.Router();
 let formulary = [];
 
 try {
-    formulary = require('../formulary.json');
+    const rawFormulary = require('../formulary.json');
+    // Map the raw JSON (item_name) to the structure expected by the app (drug_name, brand_name)
+    formulary = rawFormulary.map(item => ({
+        drug_name: item.item_name || 'Unknown',
+        brand_name: '', // The JSON doesn't seem to separate brand/generic, so we default to empty
+        rxcui: item.rxnorm_code
+    }));
     console.log(`[RxNorm] Formulary loaded: ${formulary.length} items.`);
 } catch (e) {
     console.error('[RxNorm] CRITICAL: Failed to load formulary.json from root.', e);
-    // Fallback: try the old path just in case (though we deleted it, maybe cache?)
-    try {
-        formulary = require('./Data/formulary.json');
-        console.log(`[RxNorm] Fallback: Loaded from ./Data/formulary.json: ${formulary.length} items.`);
-    } catch (e2) {
-        console.error('[RxNorm] Fallback failed too.', e2);
-        formulary = []; // Empty fallback
-    }
+    formulary = [];
 }
 
 // 1. Get Local Formulary
@@ -22,11 +21,16 @@ router.get('/formulary', (req, res) => {
     const term = req.query.q ? req.query.q.toLowerCase() : '';
     if (!term) return res.json([]);
 
-    const results = formulary.filter(d => 
-        d.drug_name.toLowerCase().includes(term) || 
-        d.brand_name.toLowerCase().includes(term)
-    );
-    res.json(results);
+    try {
+        const results = formulary.filter(d => 
+            (d.drug_name && d.drug_name.toLowerCase().includes(term)) || 
+            (d.brand_name && d.brand_name.toLowerCase().includes(term))
+        );
+        res.json(results.slice(0, 50)); // Limit results
+    } catch (err) {
+        console.error('[RxNorm] Search Error:', err);
+        res.json([]); // Return empty on error instead of crashing
+    }
 });
 
 // 2. Search RxNorm (Global)
