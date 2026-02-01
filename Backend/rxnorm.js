@@ -1,6 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const formulary = require('../formulary.json');
+let formulary = [];
+
+try {
+    formulary = require('../formulary.json');
+    console.log(`[RxNorm] Formulary loaded: ${formulary.length} items.`);
+} catch (e) {
+    console.error('[RxNorm] CRITICAL: Failed to load formulary.json from root.', e);
+    // Fallback: try the old path just in case (though we deleted it, maybe cache?)
+    try {
+        formulary = require('./Data/formulary.json');
+        console.log(`[RxNorm] Fallback: Loaded from ./Data/formulary.json: ${formulary.length} items.`);
+    } catch (e2) {
+        console.error('[RxNorm] Fallback failed too.', e2);
+        formulary = []; // Empty fallback
+    }
+}
 
 // 1. Get Local Formulary
 router.get('/formulary', (req, res) => {
