@@ -26,6 +26,26 @@ CREATE TABLE IF NOT EXISTS medmitra_enrollments (
     FOREIGN KEY (patient_id) REFERENCES master_patient_index(patient_id) ON DELETE CASCADE
 );
 
+-- 2a. MedMitra Complaints
+CREATE TABLE IF NOT EXISTS medmitra_complaints (
+    complaint_id INT AUTO_INCREMENT PRIMARY KEY,
+    enrollment_id INT,
+    title VARCHAR(255),
+    icd_code VARCHAR(50),
+    duration VARCHAR(50),
+    FOREIGN KEY (enrollment_id) REFERENCES medmitra_enrollments(enrollment_id) ON DELETE CASCADE
+);
+
+-- 2b. MedMitra Diagnoses
+CREATE TABLE IF NOT EXISTS medmitra_diagnoses (
+    diagnosis_id INT AUTO_INCREMENT PRIMARY KEY,
+    enrollment_id INT,
+    title VARCHAR(255),
+    icd_code VARCHAR(50),
+    duration VARCHAR(50),
+    FOREIGN KEY (enrollment_id) REFERENCES medmitra_enrollments(enrollment_id) ON DELETE CASCADE
+);
+
 -- 3. Medication Reminders
 CREATE TABLE IF NOT EXISTS medmitra_reminders (
     reminder_id INT AUTO_INCREMENT PRIMARY KEY,

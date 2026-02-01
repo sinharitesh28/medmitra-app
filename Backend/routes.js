@@ -63,7 +63,7 @@ router.get('/check-consent/:opdNo', async (req, res) => {
 
 // 3. Register / Enrollment
 router.post('/register', async (req, res) => {
-    const { opdNo, ipNo, patientName, age, gender, contactNumber, therapies, language } = req.body;
+    const { opdNo, ipNo, patientName, age, gender, contactNumber, therapies, language, complaints, diagnoses } = req.body;
     
     try {
         // Upsert Master Index
@@ -77,18 +77,36 @@ router.post('/register', async (req, res) => {
         });
 
         // Create Enrollment with Language
-        await db.query(`
+        const [enrRes] = await db.query(`
             INSERT INTO medmitra_enrollments (patient_id, language) VALUES (?, ?) 
             ON DUPLICATE KEY UPDATE registered_at = NOW(), language = VALUES(language)`, 
             [pid, language || 'en']
         );
 
-        // Convert Therapies to Reminders (Simplified Logic)
-        if (therapies && therapies.length > 0) {
-            // First, find the Enrollment ID
-            const [enr] = await db.query("SELECT enrollment_id FROM medmitra_enrollments WHERE patient_id = ?", [pid]);
-            const eid = enr[0].enrollment_id;
+        // Get Enrollment ID
+        const [enr] = await db.query("SELECT enrollment_id FROM medmitra_enrollments WHERE patient_id = ?", [pid]);
+        const eid = enr[0].enrollment_id;
 
+        // 1. Handle Complaints
+        if (complaints && Array.isArray(complaints)) {
+            await db.query("DELETE FROM medmitra_complaints WHERE enrollment_id = ?", [eid]);
+            const cValues = complaints.filter(c => c.title).map(c => [eid, c.title, c.code || null, c.duration || null]);
+            if (cValues.length > 0) {
+                await db.query("INSERT INTO medmitra_complaints (enrollment_id, title, icd_code, duration) VALUES ?", [cValues]);
+            }
+        }
+
+        // 2. Handle Diagnoses
+        if (diagnoses && Array.isArray(diagnoses)) {
+            await db.query("DELETE FROM medmitra_diagnoses WHERE enrollment_id = ?", [eid]);
+            const dValues = diagnoses.filter(d => d.title).map(d => [eid, d.title, d.code || null, d.duration || null]);
+            if (dValues.length > 0) {
+                await db.query("INSERT INTO medmitra_diagnoses (enrollment_id, title, icd_code, duration) VALUES ?", [dValues]);
+            }
+        }
+
+        // 3. Convert Therapies to Reminders
+        if (therapies && therapies.length > 0) {
             // Clear old
             await db.query("DELETE FROM medmitra_reminders WHERE enrollment_id = ?", [eid]);
 

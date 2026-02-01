@@ -38,29 +38,39 @@ async function getToken() {
 
         const data = await res.json();
         accessToken = data.access_token;
-        tokenExpiresAt = Date.now() + (data.expires_in * 1000) - 60000;
+        // Set expiry 5 minutes earlier to allow for proactive refresh
+        tokenExpiresAt = Date.now() + (data.expires_in * 1000) - 300000; 
         
         logICD('Token Acquired');
-        console.log('[ICD] New Token Acquired');
         return accessToken;
     } catch (e) {
         logICD('Auth Error: ' + e.message);
-        console.error('[ICD] Auth Error:', e);
         return null;
     }
 }
+
+// Proactive Token Refresher (runs every 10 mins)
+setInterval(async () => {
+    if (!accessToken || Date.now() > (tokenExpiresAt - 600000)) { // Refresh if close to expiry
+        logICD('Proactive token refresh triggered');
+        await getToken();
+    }
+}, 600000);
+
+// Initialize token on startup
+getToken();
 
 // 2. Search Proxy
 router.get('/search', async (req, res) => {
     const query = req.query.q;
     if (!query) return res.json([]);
 
-    logICD('Search Request: ' + query);
     const token = await getToken();
     if (!token) return res.status(500).json({ error: 'ICD Auth Failed' });
 
     try {
-        const url = `${SEARCH_URL}?q=${encodeURIComponent(query)}&useFlexisearch=true&includeKeywordResult=true`;
+        // Optimized URL parameters
+        const url = `${SEARCH_URL}?q=${encodeURIComponent(query)}&useFlexisearch=true&flatResults=true`;
         
         const apiRes = await fetch(url, {
             headers: {
@@ -71,19 +81,22 @@ router.get('/search', async (req, res) => {
             }
         });
 
-        if (!apiRes.ok) throw new Error('Search failed: ' + apiRes.status + ' ' + await apiRes.text());
+        if (!apiRes.ok) throw new Error('Search failed: ' + apiRes.status);
 
         const data = await apiRes.json();
-        // console.log('[ICD] Raw Response:', JSON.stringify(data).substring(0, 500)); 
         
-        // Simplify result for frontend
-        const results = data.destinationEntities ? data.destinationEntities.map(entity => ({
-            title: entity.title.replace(/<[^>]*>?/gm, ''), // Strip HTML highlighting
-            code: entity.theCode || 'No Code', // Some entities don't have codes (chapters)
-            id: entity.id
-        })) : [];
+        // Filter: Only include entities that HAVE a code (No "No Code" results)
+        const results = data.destinationEntities 
+            ? data.destinationEntities
+                .filter(entity => entity.theCode && entity.theCode !== 'No Code')
+                .map(entity => ({
+                    title: entity.title.replace(/<[^>]*>?/gm, ''), 
+                    code: entity.theCode,
+                    id: entity.id
+                })) 
+            : [];
 
-        res.json(results);
+        res.json(results.slice(0, 15)); // Limit to top 15 for speed
 
     } catch (e) {
         console.error('[ICD] Search Error:', e);

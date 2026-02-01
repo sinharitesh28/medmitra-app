@@ -117,22 +117,30 @@
                             </div>
                         </div>
 
-                        <!-- Diagnosis -->
+                        <!-- Clinical Info -->
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 relative group">
                              <div class="absolute top-0 left-0 w-1.5 h-full bg-quaternary"></div>
                              <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">🩺 Clinical Info</h3>
-                             <div class="space-y-6">
-                                <div class="relative">
-                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Chief Complaint</label>
-                                    <input type="text" id="complaint" onkeyup="searchICD(this, 'complaint-list', 'complaintCode')" autocomplete="off" class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all">
-                                    <input type="hidden" id="complaintCode">
-                                    <ul id="complaint-list" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-2 shadow-xl max-h-60 overflow-y-auto hidden"></ul>
+                             
+                             <!-- Chief Complaints -->
+                             <div class="mb-8">
+                                <div class="flex justify-between items-center mb-4">
+                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Chief Complaints</label>
+                                    <button type="button" onclick="addClinicalRow('complaints-container', 'complaint')" class="text-xs font-bold text-secondary hover:text-primary transition-colors">+ Add Complaint</button>
                                 </div>
-                                <div class="relative">
-                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Confirmed Diagnosis</label>
-                                    <input type="text" id="diagnosis" onkeyup="searchICD(this, 'diagnosis-list', 'diagnosisCode')" autocomplete="off" class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all">
-                                    <input type="hidden" id="diagnosisCode">
-                                    <ul id="diagnosis-list" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-2 shadow-xl max-h-60 overflow-y-auto hidden"></ul>
+                                <div id="complaints-container" class="space-y-3">
+                                    <!-- Dynamic Rows -->
+                                </div>
+                             </div>
+
+                             <!-- Confirmed Diagnosis -->
+                             <div>
+                                <div class="flex justify-between items-center mb-4">
+                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Confirmed Diagnoses</label>
+                                    <button type="button" onclick="addClinicalRow('diagnosis-container', 'diagnosis')" class="text-xs font-bold text-secondary hover:text-primary transition-colors">+ Add Diagnosis</button>
+                                </div>
+                                <div id="diagnosis-container" class="space-y-3">
+                                    <!-- Dynamic Rows -->
                                 </div>
                              </div>
                         </div>
@@ -195,7 +203,9 @@
         /* --- Application Logic --- */
         let pollingInterval = null;
         let rowCount = 0;
+        let clinicalRowCount = 0;
         const botUsername = CONFIG.BOT_USERNAME;
+        const icdCache = {}; // Client-side flash cache
 
         function debounce(func, wait) {
             let timeout;
@@ -206,21 +216,88 @@
         }
 
         const searchICD = debounce(async (input, listId, codeId) => {
-            const term = input.value;
+            const term = input.value.trim();
             const list = document.getElementById(listId);
-            if (term.length < 3) { list.classList.add('hidden'); return; }
+            
+            if (term.length < 3) { 
+                list.classList.add('hidden'); 
+                return; 
+            }
+
+            // Check Cache
+            if (icdCache[term]) {
+                renderICDResults(icdCache[term], list, input.id, codeId, listId);
+                return;
+            }
+
+            // Show Loading State
+            list.innerHTML = '<li class="px-5 py-3 text-sm text-gray-400 italic">Searching...</li>';
+            list.classList.remove('hidden');
+
             try {
                 const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/icd/search?q=${encodeURIComponent(term)}`, { 
                     credentials: 'include',
                     headers: getAuthHeaders()
                 });
                 const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    list.innerHTML = data.map(item => `<li onclick="selectICD('${item.title}', '${item.code}', '${listId}', '${input.id}', '${codeId}')" class="px-5 py-3 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-none"><div>${item.title}</div><div class="text-xs text-gray-400 font-mono">${item.code}</div></li>`).join('');
-                    list.classList.remove('hidden');
-                } else { list.classList.add('hidden'); }
-            } catch (e) { console.error(e); }
-        }, 400);
+                
+                if (Array.isArray(data)) {
+                    icdCache[term] = data; // Save to cache
+                    renderICDResults(data, list, input.id, codeId, listId);
+                } else {
+                    list.classList.add('hidden');
+                }
+            } catch (e) { 
+                console.error(e);
+                list.classList.add('hidden');
+            }
+        }, 350); // Faster debounce
+
+        function renderICDResults(data, list, inputId, codeId, listId) {
+            if (data.length > 0) {
+                list.innerHTML = data.map(item => `
+                    <li onclick="selectICD('${item.title.replace(/'/g, "\\'")}', '${item.code}', '${listId}', '${inputId}', '${codeId}')" 
+                        class="px-5 py-3 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-none">
+                        <div class="font-medium text-gray-800">${item.title}</div>
+                        <div class="text-[10px] text-secondary font-bold font-mono mt-0.5">${item.code}</div>
+                    </li>
+                `).join('');
+                list.classList.remove('hidden');
+            } else {
+                list.innerHTML = '<li class="px-5 py-3 text-sm text-gray-400">No specific codes found</li>';
+            }
+        }
+
+        function addClinicalRow(containerId, type) {
+            const container = document.getElementById(containerId);
+            const id = clinicalRowCount++;
+            const div = document.createElement('div');
+            div.className = "flex gap-3 relative animate-[fadeIn_0.2s_ease-out]";
+            div.innerHTML = `
+                <div class="flex-1 relative">
+                    <input type="text" placeholder="${type === 'complaint' ? 'Symptom...' : 'Diagnosis...'}" 
+                           onkeyup="searchICD(this, 'list-${type}-${id}', 'code-${type}-${id}')" 
+                           autocomplete="off" required 
+                           class="clinical-title block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm transition-all">
+                    <input type="hidden" class="clinical-code" id="code-${type}-${id}">
+                    <ul id="list-${type}-${id}" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-1 shadow-2xl max-h-48 overflow-y-auto hidden"></ul>
+                </div>
+                <div class="w-32">
+                    <input type="text" placeholder="Duration" 
+                           class="clinical-duration block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm transition-all">
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="text-gray-400 hover:text-red-500 p-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"></path></svg>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
+        // Initialize with one row each
+        window.addEventListener('DOMContentLoaded', () => {
+            addClinicalRow('complaints-container', 'complaint');
+            addClinicalRow('diagnosis-container', 'diagnosis');
+        });
 
         const searchDrug = debounce(async (input, id) => {
             const term = input.value;
@@ -295,6 +372,20 @@
             qrCodeDiv.innerHTML = '';
             if (pollingInterval) clearInterval(pollingInterval);
             const opdNo = document.getElementById('opdNo').value;
+            
+            // Collect Clinical Info
+            const complaints = Array.from(document.getElementById('complaints-container').children).map(row => ({
+                title: row.querySelector('.clinical-title').value,
+                code: row.querySelector('.clinical-code').value,
+                duration: row.querySelector('.clinical-duration').value
+            })).filter(c => c.title);
+
+            const diagnoses = Array.from(document.getElementById('diagnosis-container').children).map(row => ({
+                title: row.querySelector('.clinical-title').value,
+                code: row.querySelector('.clinical-code').value,
+                duration: row.querySelector('.clinical-duration').value
+            })).filter(d => d.title);
+
             const therapies = [];
             const rows = document.getElementById('therapyTable').getElementsByTagName('tbody')[0].rows;
             for (let i = 0; i < rows.length; i++) {
@@ -307,7 +398,15 @@
                     endDate: inputs[4].value 
                 });
             }
-            const data = { opdNo, patientName: document.getElementById('patientName').value, contactNumber: document.getElementById('contactNumber').value, complaint: document.getElementById('complaint').value, complaintCode: document.getElementById('complaintCode').value, diagnosis: document.getElementById('diagnosis').value, diagnosisCode: document.getElementById('diagnosisCode').value, language: document.getElementById('language').value, therapies };
+            const data = { 
+                opdNo, 
+                patientName: document.getElementById('patientName').value, 
+                contactNumber: document.getElementById('contactNumber').value, 
+                language: document.getElementById('language').value,
+                complaints,
+                diagnoses,
+                therapies 
+            };
             try {
                 const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/register`, { 
                     method: 'POST', 
