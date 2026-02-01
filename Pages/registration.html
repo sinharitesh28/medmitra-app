@@ -160,6 +160,7 @@
                                             <th class="px-5 py-4">Dose</th>
                                             <th class="px-5 py-4">Schedule</th>
                                             <th class="px-5 py-4">End Date</th>
+                                            <th class="px-5 py-4 text-center">Safety</th>
                                             <th class="px-5 py-4 text-center">Action</th>
                                         </tr>
                                     </thead>
@@ -180,6 +181,32 @@
                     </div>
                 </div>
             </main>
+        </div>
+    <div id="safety-modal" class="fixed inset-0 z-[60] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity" onclick="document.getElementById('safety-modal').classList.add('hidden')"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg" onclick="event.stopPropagation()">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                <h3 class="text-lg font-bold leading-6 text-gray-900" id="modal-title">Safety Profile</h3>
+                                <div id="safety-content" class="mt-4 space-y-4">
+                                    <!-- Content injected via JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto" onclick="document.getElementById('safety-modal').classList.add('hidden')">Close</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -340,11 +367,12 @@
             const row = table.insertRow();
             const id = rowCount++;
             row.className = "hover:bg-gray-50/50 transition-colors group animate-[fadeIn_0.3s_ease-in-out]";
-            row.innerHTML = `<td class="px-5 py-3 relative align-top"><input type="text" placeholder="Drug..." onkeyup="searchDrug(this, ${id})" autocomplete="off" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"><ul id="suggestions-${id}" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-1 shadow-2xl max-h-48 overflow-y-auto hidden left-0 ring-1 ring-black/5"></ul><input type="hidden" class="rxcui-hidden"></td><td class="px-5 py-3 align-top"><input list="doses-${id}" type="text" placeholder="500mg" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"><datalist id="doses-${id}"></datalist></td><td class="px-5 py-3 align-top"><input type="text" placeholder="09:00, 21:00" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"></td><td class="px-5 py-3 align-top"><input type="date" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"></td><td class="px-5 py-3 text-center align-top pt-4"><button type="button" onclick="this.closest('tr').remove()" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"></path></svg></button></td>`;
+            row.innerHTML = `<td class="px-5 py-3 relative align-top"><input type="text" placeholder="Drug..." onkeyup="searchDrug(this, ${id})" autocomplete="off" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"><ul id="suggestions-${id}" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-1 shadow-2xl max-h-48 overflow-y-auto hidden left-0 ring-1 ring-black/5"></ul><input type="hidden" class="rxcui-hidden"></td><td class="px-5 py-3 align-top"><input list="doses-${id}" type="text" placeholder="500mg" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"><datalist id="doses-${id}"></datalist></td><td class="px-5 py-3 align-top"><input type="text" placeholder="09:00, 21:00" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"></td><td class="px-5 py-3 align-top"><input type="date" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"></td><td class="px-5 py-3 text-center align-top pt-3"><button type="button" disabled class="text-gray-300 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50" onclick="showSafetyInfo(this)"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></button></td><td class="px-5 py-3 text-center align-top pt-4"><button type="button" onclick="this.closest('tr').remove()" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"></path></svg></button></td>`;
         }
 
         async function selectDrug(li, id, name, rxcui, brand) {
             const row = li.closest('td');
+            const tr = li.closest('tr');
             const input = row.querySelector('input[type="text"]');
             const hidden = row.querySelector('.rxcui-hidden');
             const list = row.querySelector('ul');
@@ -352,6 +380,16 @@
             input.value = name + (brand ? ` (${brand})` : '');
             hidden.value = rxcui;
             list.classList.add('hidden');
+
+            // Enable Safety Button
+            const safetyBtn = tr.querySelector('button[onclick="showSafetyInfo(this)"]');
+            if (safetyBtn) {
+                safetyBtn.dataset.drugName = name;
+                safetyBtn.disabled = false;
+                safetyBtn.classList.remove('text-gray-300');
+                safetyBtn.classList.add('text-red-500');
+            }
+
             try {
                 const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/rxnorm/details/${rxcui}`, { 
                     credentials: 'include',
@@ -360,6 +398,75 @@
                 const data = await res.json();
                 if (data.available_doses) doseList.innerHTML = data.available_doses.map(d => `<option value="${d}">`).join('');
             } catch (e) { console.error(e); }
+        }
+
+        async function showSafetyInfo(btn) {
+            const drugName = btn.dataset.drugName;
+            if (!drugName) return;
+            
+            const modal = document.getElementById('safety-modal');
+            const content = document.getElementById('safety-content');
+            const title = document.getElementById('modal-title');
+            
+            title.textContent = `Safety Profile: ${drugName}`;
+            modal.classList.remove('hidden');
+            content.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div><p class="mt-2 text-sm text-gray-500">Querying OpenFDA...</p></div>';
+
+            try {
+                const term = encodeURIComponent(drugName);
+                // Parallel fetch for events and deaths
+                const [eventsRes, deathRes] = await Promise.all([
+                    fetch(`https://api.fda.gov/drug/event.json?search=patient.drug.medicinalproduct:"${term}"&count=patient.reaction.reactionmeddrapt.exact&limit=5`),
+                    fetch(`https://api.fda.gov/drug/event.json?search=patient.drug.medicinalproduct:"${term}"+AND+seriousnessdeath:1&count=patient.reaction.reactionmeddrapt.exact&limit=5`)
+                ]);
+
+                const events = eventsRes.ok ? await eventsRes.json() : { results: [] };
+                const deaths = deathRes.ok ? await deathRes.json() : { results: [] };
+
+                renderSafetyModal(events.results, deaths.results);
+            } catch (e) {
+                content.innerHTML = `<div class="text-center py-8 text-red-500"><p>Failed to load data from OpenFDA.</p><p class="text-xs text-gray-400 mt-1">${e.message}</p></div>`;
+            }
+        }
+
+        function renderSafetyModal(events, deaths) {
+            const content = document.getElementById('safety-content');
+            
+            const renderList = (items, emptyMsg, color) => {
+                if (!items || items.length === 0) return `<p class="text-sm text-gray-400 italic">${emptyMsg}</p>`;
+                const max = Math.max(...items.map(i => i.count));
+                return items.map(i => `
+                    <div class="flex items-center justify-between text-sm mb-1">
+                        <span class="capitalize text-gray-700 font-medium">${i.term.toLowerCase()}</span>
+                        <span class="text-xs font-bold ${color}">${i.count}</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5 mb-3">
+                        <div class="${color.replace('text', 'bg')} h-1.5 rounded-full" style="width: ${(i.count / max) * 100}%"></div>
+                    </div>
+                `).join('');
+            };
+
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Most Reported Side Effects</h4>
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            ${renderList(events, "No data available.", "text-blue-500")}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-red-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Reported Adverse Events (Lethal)
+                        </h4>
+                        <div class="bg-red-50 p-4 rounded-xl border border-red-100">
+                            ${renderList(deaths, "No lethal events reported.", "text-red-500")}
+                        </div>
+                    </div>
+                    <div class="text-[10px] text-gray-400 text-center border-t border-gray-100 pt-3">
+                        Source: openFDA API. Data is based on reported events and does not establish causality.
+                    </div>
+                </div>
+            `;
         }
 
         document.getElementById('medMitraForm').addEventListener('submit', async (e) => {
