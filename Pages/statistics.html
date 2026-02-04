@@ -88,6 +88,20 @@
 
             <main class="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 scroll-smooth">
                 
+                <!-- Date Filter -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200/60 p-4 flex flex-wrap gap-4 items-end mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Start Date</label>
+                        <input type="date" id="startDate" class="block px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">End Date</label>
+                        <input type="date" id="endDate" class="block px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary">
+                    </div>
+                    <button onclick="applyFilter()" class="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-bold shadow-md shadow-secondary/20 hover:bg-secondary/90 transition-all">Filter</button>
+                    <button onclick="resetFilter()" class="px-4 py-2 text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors">Reset</button>
+                </div>
+
                 <!-- KPIs -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/60 flex flex-col items-center hover:shadow-md transition-shadow">
@@ -201,10 +215,18 @@
         });
 
         /* --- Stats Logic --- */
+        let regChartInstance = null;
+        let respChartInstance = null;
+
         async function fetchStats() {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            let query = '';
+            if (start) query = `?startDate=${start}&endDate=${end || start}`;
+
             try {
                 // 1. Fetch Main Stats
-                const statsRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/stats`, { 
+                const statsRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/stats${query}`, { 
                     credentials: 'include',
                     headers: getAuthHeaders()
                 });
@@ -220,7 +242,9 @@
 
                 // Render Registrations Chart
                 const regCtx = document.getElementById('regChart').getContext('2d');
-                new Chart(regCtx, {
+                if (regChartInstance) regChartInstance.destroy();
+                
+                regChartInstance = new Chart(regCtx, {
                     type: 'line',
                     data: {
                         labels: stats.registrations.map(r => r.date),
@@ -247,6 +271,8 @@
 
                 // Render Response Distribution Chart
                 const respCtx = document.getElementById('responseChart').getContext('2d');
+                if (respChartInstance) respChartInstance.destroy();
+
                 const labels = stats.responses.map(r => r.response);
                 const data = stats.responses.map(r => r.count);
                 // Color mapping
@@ -258,7 +284,7 @@
                 };
                 const bgColors = labels.map(l => colorMap[l] || '#CBD5E1');
 
-                new Chart(respCtx, {
+                respChartInstance = new Chart(respCtx, {
                     type: 'doughnut',
                     data: {
                         labels: labels,
@@ -292,7 +318,7 @@
                 }
 
                 // 2. Fetch Upcoming Reminders
-                const schedRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/assigned-reminders`, { 
+                const schedRes = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/assigned-reminders${query}`, { 
                     credentials: 'include',
                     headers: getAuthHeaders()
                 });
@@ -316,6 +342,13 @@
             } catch (err) {
                 console.error('Error loading stats:', err);
             }
+        }
+
+        function applyFilter() { fetchStats(); }
+        function resetFilter() {
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            fetchStats();
         }
 
         fetchStats();

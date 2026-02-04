@@ -12,15 +12,8 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: '#1B211A',
-                        secondary: '#628141',
-                        tertiary: '#8BAE66',
-                        quaternary: '#EBD5AB',
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { primary: '#1B211A', secondary: '#628141', tertiary: '#8BAE66', quaternary: '#EBD5AB' }
                 }
             }
         }
@@ -29,6 +22,8 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         thead th { position: sticky; top: 0; z-index: 10; }
+        .slide-over { transform: translateX(100%); transition: transform 0.3s ease-out; }
+        .slide-over.active { transform: translateX(0); }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-900">
@@ -43,26 +38,26 @@
             </div>
             <nav class="flex-1 px-4 py-8 space-y-2 overflow-y-auto no-scrollbar">
                 <a href="registration.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📝</span><span class="font-medium tracking-wide">Registration</span>
+                    <span class="text-xl mr-3 opacity-70">📝</span><span class="font-medium tracking-wide">Registration</span>
                 </a>
                 <a href="assigned.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📅</span><span class="font-medium tracking-wide">Assigned</span>
+                    <span class="text-xl mr-3 opacity-70">📅</span><span class="font-medium tracking-wide">Assigned</span>
                 </a>
                 <a href="reminders.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">🔔</span><span class="font-medium tracking-wide">Reminders</span>
+                    <span class="text-xl mr-3 opacity-70">🔔</span><span class="font-medium tracking-wide">Reminders</span>
                 </a>
                 <a href="statistics.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📊</span><span class="font-medium tracking-wide">Statistics</span>
+                    <span class="text-xl mr-3 opacity-70">📊</span><span class="font-medium tracking-wide">Statistics</span>
                 </a>
                 <a href="inactive.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">⚠️</span><span class="font-medium tracking-wide">Inactive</span>
+                    <span class="text-xl mr-3 opacity-70">⚠️</span><span class="font-medium tracking-wide">Inactive</span>
                 </a>
                 <a href="alerts.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">🚨</span><span class="font-medium tracking-wide">Alerts</span>
+                    <span class="text-xl mr-3 opacity-70">🚨</span><span class="font-medium tracking-wide">Alerts</span>
                 </a>
                 <div class="my-4 border-t border-gray-800/50"></div>
                 <a href="admin_dashboard.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">⚙️</span><span class="font-medium tracking-wide">Admin</span>
+                    <span class="text-xl mr-3 opacity-70">⚙️</span><span class="font-medium tracking-wide">Admin</span>
                 </a>
             </nav>
             <div class="p-6 border-t border-gray-800/50">
@@ -81,12 +76,27 @@
                     </button>
                     <div>
                         <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Adverse Reaction Alerts</h2>
-                        <p class="text-xs text-gray-500 font-medium mt-0.5">Critical response monitoring</p>
+                        <p class="text-xs text-red-500 font-bold mt-0.5 animate-pulse uppercase tracking-widest">Critical Monitoring</p>
                     </div>
                 </div>
+                <div id="user-profile"></div>
             </header>
 
             <main class="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 scroll-smooth">
+                <!-- Date Filter -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200/60 p-4 flex flex-wrap gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Start Date</label>
+                        <input type="date" id="startDate" class="block px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">End Date</label>
+                        <input type="date" id="endDate" class="block px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary">
+                    </div>
+                    <button onclick="applyFilter()" class="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-bold shadow-md shadow-secondary/20 hover:bg-secondary/90 transition-all">Filter</button>
+                    <button onclick="resetFilter()" class="px-4 py-2 text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors">Reset</button>
+                </div>
+
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden flex flex-col h-[700px]">
                     <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/30">
                         <div class="w-full md:w-auto relative group">
@@ -98,10 +108,6 @@
                                 </span>
                              </div>
                         </div>
-                         <div class="flex items-center gap-2">
-                             <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                             <span class="text-xs text-red-500 font-bold uppercase tracking-wide">Live Feed</span>
-                        </div>
                     </div>
                     
                     <div class="overflow-auto flex-1">
@@ -109,14 +115,13 @@
                             <thead class="bg-gray-50/80 backdrop-blur-sm border-b border-gray-200">
                                 <tr class="text-gray-500 text-xs uppercase tracking-wider font-semibold">
                                     <th class="px-6 py-4 font-bold text-gray-600">Date & Time</th>
-                                    <th class="px-6 py-4 font-bold text-gray-600">Patient Name</th>
-                                    <th class="px-6 py-4 font-bold text-gray-600">OPD No</th>
+                                    <th class="px-6 py-4 font-bold text-gray-600">Patient</th>
                                     <th class="px-6 py-4 font-bold text-gray-600">Contact</th>
                                     <th class="px-6 py-4 font-bold text-gray-600">Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white">
-                                <tr><td colspan="5" class="px-6 py-12 text-center text-gray-400 font-medium">Loading alerts...</td></tr>
+                                <tr><td colspan="4" class="px-6 py-12 text-center text-gray-400 font-medium">Loading alerts...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -125,87 +130,91 @@
         </div>
     </div>
 
+    <!-- Patient Smart View Overlay -->
+    <div id="patient-overlay-bg" onclick="closePatientProfile()" class="fixed inset-0 bg-primary/40 backdrop-blur-sm z-[100] hidden transition-opacity duration-300"></div>
+    <div id="patient-overlay" class="fixed top-0 right-0 h-full w-full max-w-2xl bg-white z-[101] shadow-2xl slide-over overflow-y-auto flex flex-col">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 sticky top-0 bg-white z-10">
+            <div>
+                <h3 id="prof-name" class="text-xl font-bold text-gray-800 leading-tight">Patient Profile</h3>
+                <p id="prof-opd" class="text-xs text-secondary font-bold font-mono uppercase tracking-widest mt-1"></p>
+            </div>
+            <button onclick="closePatientProfile()" class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div id="prof-content" class="p-8 space-y-10"></div>
+    </div>
+
     <script>
-        // Sidebar & Nav Logic
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            const isHidden = sidebar.classList.contains('-translate-x-full');
-            
-            if (isHidden) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('opacity-0');
-                setTimeout(() => overlay.classList.add('hidden'), 300);
-            }
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
         }
         function logout() { 
-            console.log('Logging out...');
             localStorage.removeItem('auth_token');
             window.location.href = './login.html'; 
         }
-
         function getAuthHeaders() {
             const token = localStorage.getItem('auth_token');
             return token ? { 'Authorization': `Bearer ${token}` } : {};
         }
 
-        // Highlight Active Link
         const currentPath = window.location.pathname;
         document.querySelectorAll('.nav-link').forEach(link => {
-            if(link.getAttribute('href') === currentPath) {
+            if(link.getAttribute('href').includes('alerts.html')) {
                 link.classList.add('bg-secondary', 'text-white', 'shadow-lg', 'shadow-secondary/20', 'border-l-4', 'border-quaternary');
-                link.classList.remove('text-gray-300', 'hover:bg-white/5');
-            } else {
-                link.classList.add('text-gray-400');
-            }
+            } else { link.classList.add('text-gray-400'); }
         });
 
-        /* --- Page Logic --- */
-        let alerts = [];
+        let alertsData = [];
 
         async function fetchAlerts() {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            let url = `${CONFIG.API_BASE_URL}/api/medmitra/reaction-alerts`;
+            if (start) url += `?startDate=${start}&endDate=${end || start}`;
+
             try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/reaction-alerts`, { 
-                    credentials: 'include',
-                    headers: getAuthHeaders()
-                });
+                const response = await fetch(url, { credentials: 'include', headers: getAuthHeaders() });
                 if (response.status === 401) { logout(); return; }
-                alerts = await response.json();
-                renderTable(alerts);
+                alertsData = await response.json();
+                renderTable(alertsData);
             } catch (error) {
-                console.error('Error fetching alerts:', error);
-                document.querySelector('#alertsTable tbody').innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-red-500 font-medium">Failed to load alerts.</td></tr>';
+                console.error('Error:', error);
+                document.querySelector('#alertsTable tbody').innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-red-500 font-medium">Failed to load alerts.</td></tr>';
             }
+        }
+
+        function applyFilter() { fetchAlerts(); }
+        function resetFilter() {
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            fetchAlerts();
         }
 
         function renderTable(data) {
             const tbody = document.querySelector('#alertsTable tbody');
             tbody.innerHTML = '';
-
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500 font-medium">No reaction alerts found.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-gray-500 font-medium">No critical reactions reported.</td></tr>';
                 return;
             }
-
-            data.forEach(alert => {
+            data.forEach(item => {
                 const tr = document.createElement('tr');
-                tr.className = "bg-red-50/50 hover:bg-red-50 transition-colors border-b border-red-100 last:border-none";
-                
-                const time = new Date(alert.response_at).toLocaleString();
-                
+                tr.className = "bg-red-50/30 hover:bg-red-50 transition-colors border-b border-red-100 last:border-none";
                 tr.innerHTML = `
-                    <td class="px-6 py-4 text-gray-700 font-medium text-sm">${time}</td>
-                    <td class="px-6 py-4 text-gray-900 font-bold text-lg">${alert.patient_name}</td>
-                    <td class="px-6 py-4 text-gray-600 font-mono text-sm">${alert.opd_no}</td>
-                    <td class="px-6 py-4 text-gray-700 font-medium">${alert.contact_number || '-'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700 font-medium">${new Date(item.response_at).toLocaleString()}</td>
                     <td class="px-6 py-4">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 uppercase tracking-wide">
+                        <button onclick="showPatientProfile('${item.opd_no}')" class="text-red-700 font-extrabold hover:underline text-left text-lg">${item.patient_name}</button>
+                        <div class="text-[10px] text-gray-400 font-mono">${item.opd_no}</div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-700 font-medium">${item.contact_number || '-'}</td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 uppercase tracking-wide">
                             <span class="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
-                            Reaction Reported
+                            REACTION
                         </span>
                     </td>
                 `;
@@ -213,12 +222,95 @@
             });
         }
 
+        async function showPatientProfile(opdNo) {
+            const bg = document.getElementById('patient-overlay-bg');
+            const panel = document.getElementById('patient-overlay');
+            const content = document.getElementById('prof-content');
+            bg.classList.remove('hidden');
+            panel.classList.add('active');
+            content.innerHTML = '<div class="flex justify-center py-20"><div class="animate-spin rounded-full h-10 w-10 border-b-2 border-red-500"></div></div>';
+
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/patient-profile/${opdNo}`, { credentials: 'include', headers: getAuthHeaders() });
+                const data = await res.json();
+                
+                // Calculate Adherence Score
+                const totalSent = data.logs.length;
+                const totalTaken = data.logs.filter(l => l.response === 'TAKEN').length;
+                const score = totalSent > 0 ? Math.round((totalTaken / totalSent) * 100) : 0;
+
+                document.getElementById('prof-name').textContent = data.identity.full_name;
+                document.getElementById('prof-opd').textContent = `OPD: ${data.identity.opd_no} | Age: ${data.identity.age || 'N/A'} | Gender: ${data.identity.gender || 'N/A'}`;
+
+                content.innerHTML = `
+                    <div class="bg-gray-900 text-white p-6 rounded-3xl shadow-xl flex items-center justify-between">
+                        <div>
+                            <div class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Adherence Score</div>
+                            <div class="text-4xl font-black text-quaternary">${score}%</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-gray-400 font-bold uppercase mb-1">Last Interaction</div>
+                            <div class="text-sm font-bold text-secondary">${data.identity.last_interaction ? new Date(data.identity.last_interaction).toLocaleDateString() : 'None'}</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Complaints</h4>
+                            <ul class="space-y-2">
+                                ${data.clinical.complaints.map(c => `<li class="text-sm font-semibold text-gray-700 flex justify-between"><span>${c.title}</span><span class="text-gray-400 text-xs">${c.duration || ''}</span></li>`).join('') || '<li class="text-xs italic text-gray-400">None</li>'}
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Diagnosis</h4>
+                            <ul class="space-y-2">
+                                ${data.clinical.diagnoses.map(d => `<li class="text-sm font-semibold text-gray-700 flex justify-between"><span>${d.title}</span><span class="text-secondary font-mono text-[10px]">${d.icd_code || ''}</span></li>`).join('') || '<li class="text-xs italic text-gray-400">None</li>'}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Current Regimen</h4>
+                        <div class="space-y-3">
+                            ${data.therapy.map(t => `
+                                <div class="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                                    <div>
+                                        <div class="text-sm font-bold text-gray-800">${t.drug_name}</div>
+                                        <div class="text-xs text-gray-500">${t.dose_instruction} • ${Array.isArray(t.schedule_times) ? t.schedule_times.join(', ') : (typeof t.schedule_times === 'string' ? JSON.parse(t.schedule_times).join(', ') : '')}</div>
+                                    </div>
+                                    <div class="text-right text-xs font-bold text-secondary">${t.end_date ? new Date(t.end_date).toLocaleDateString() : 'Continuous'}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Timeline</h4>
+                        <div class="relative pl-6 border-l-2 border-gray-100 space-y-8">
+                            ${data.logs.map(l => `
+                                <div class="relative">
+                                    <div class="absolute -left-[33px] top-1 w-4 h-4 rounded-full border-4 border-white ${l.response === 'TAKEN' ? 'bg-green-500' : l.response === 'REACTION' ? 'bg-red-500' : 'bg-gray-300'} shadow-sm"></div>
+                                    <div class="text-xs font-bold text-gray-400">${new Date(l.sent_at).toLocaleString()}</div>
+                                    <div class="mt-1 text-sm font-medium text-gray-700">${(l.message_sent || '').split('\n')[0]}</div>
+                                    <div class="mt-1 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${l.response === 'REACTION' ? 'text-red-700 bg-red-100' : 'text-gray-500 bg-gray-100'}">
+                                        Status: ${l.response}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } catch (err) { content.innerHTML = '<div class="p-8 text-center text-red-500">Failed to load profile.</div>'; }
+        }
+
+        function closePatientProfile() {
+            document.getElementById('patient-overlay-bg').classList.add('hidden');
+            document.getElementById('patient-overlay').classList.remove('active');
+        }
+
         function filterTable() {
             const term = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = alerts.filter(alert => 
-                alert.patient_name.toLowerCase().includes(term) || 
-                alert.opd_no.toLowerCase().includes(term)
-            );
+            const filtered = alertsData.filter(item => item.patient_name.toLowerCase().includes(term) || item.opd_no.toLowerCase().includes(term));
             renderTable(filtered);
         }
 

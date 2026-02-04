@@ -39,7 +39,7 @@ async function runScheduleCheck() {
             FROM medmitra_reminders r
             JOIN medmitra_enrollments e ON r.enrollment_id = e.enrollment_id
             JOIN master_patient_index p ON e.patient_id = p.patient_id
-            WHERE e.consent_status = 1
+            WHERE e.consent_status = 1 AND (r.end_date >= CURDATE() OR r.end_date IS NULL)
         `);
 
         for (const row of rows) {
@@ -76,7 +76,7 @@ async function checkMissedReminders() {
                 FROM medmitra_reminders r
                 JOIN medmitra_enrollments e ON r.enrollment_id = e.enrollment_id
                 JOIN master_patient_index p ON e.patient_id = p.patient_id
-                WHERE e.consent_status = 1
+                WHERE e.consent_status = 1 AND (r.end_date >= CURDATE() OR r.end_date IS NULL)
             `);
 
             for (const row of rows) {

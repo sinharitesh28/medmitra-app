@@ -51,36 +51,20 @@
             
             if (!rightContainer) {
                 // Adapt existing header if it doesn't match new structure
-                if (getComputedStyle(header).position === 'static') {
-                    header.style.position = 'relative';
-                }
-                
                 rightContainer = document.createElement('div');
                 rightContainer.id = 'user-profile';
-                rightContainer.style.position = 'absolute';
-                rightContainer.style.right = '20px';
-                rightContainer.style.top = '50%';
-                rightContainer.style.transform = 'translateY(-50%)';
-                rightContainer.style.display = 'flex';
-                rightContainer.style.alignItems = 'center';
-                rightContainer.style.gap = '15px';
-                rightContainer.style.color = 'white';
+                rightContainer.className = "flex items-center gap-3 ml-auto";
                 header.appendChild(rightContainer);
             }
 
             rightContainer.innerHTML = `
-                <div style="text-align:right; font-size:0.9rem;">
-                    <strong>${user.name || user.email}</strong><br>
-                    <small style="opacity:0.8">${user.role}</small>
+                <div class="hidden sm:block text-right leading-tight">
+                    <div class="text-xs font-bold text-gray-800">${user.name || user.email}</div>
+                    <div class="text-[10px] text-secondary font-bold uppercase tracking-wider">${user.role}</div>
                 </div>
-                <button id="logoutBtn" style="
-                    padding: 5px 12px;
-                    background: rgba(255,255,255,0.2);
-                    border: 1px solid white;
-                    border-radius: 4px;
-                    color: white;
-                    cursor: pointer;
-                    font-size: 0.8rem;">Logout</button>
+                <button id="logoutBtn" class="p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors border border-gray-100 hover:border-red-100" title="Sign Out">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                </button>
             `;
 
             document.getElementById('logoutBtn').onclick = async () => {

@@ -27,7 +27,8 @@ app.use(cors({
         'https://sinharitesh28.github.io', 
         'https://sinharitesh28.github.io/medmitra-app',
         'http://127.0.0.1:5500',
-        'http://localhost:3000'
+        'http://localhost:3000',
+        'http://localhost:3002'
     ],
     credentials: true
 }));

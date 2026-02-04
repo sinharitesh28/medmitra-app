@@ -5,6 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'medmitra_secret_key_change_me';
 const authGuard = (req, res, next) => {
     // Check if request is for the login page or public routes
     if (req.path === '/login.html' || 
+        req.path === '/medmitra/login.html' || 
         req.path === '/api/auth/send-otp' || 
         req.path === '/api/auth/verify-otp' || 
         req.path === '/api/auth/logout' ||
@@ -34,7 +35,7 @@ const authGuard = (req, res, next) => {
             return res.status(401).json({ error: 'Unauthorized: No Token' });
         }
         // If Page request, redirect to login
-        return res.redirect('/login.html');
+        return res.redirect('/medmitra/login.html');
     }
 
     try {
@@ -46,7 +47,7 @@ const authGuard = (req, res, next) => {
         if (req.originalUrl.startsWith('/api')) {
             return res.status(401).json({ error: 'Invalid Token' });
         }
-        return res.redirect('/login.html');
+        return res.redirect('/medmitra/login.html');
     }
 };
 

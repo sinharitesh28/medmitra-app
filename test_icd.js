@@ -6,7 +6,7 @@ async function test() {
 
     const req = http.request({
         hostname: 'localhost',
-        port: 3000,
+        port: 3002,
         path: `/api/medmitra/icd/search?q=${query}`,
         method: 'GET'
     }, (res) => {

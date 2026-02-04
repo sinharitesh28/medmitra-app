@@ -27,12 +27,57 @@
         .suggestions-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* New Styles for Smart UI */
+        .glass-overlay {
+            backdrop-filter: blur(8px);
+            background: rgba(27, 33, 26, 0.85);
+        }
+        .qr-card {
+            background: white;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Wizard & Mobile Nav Styles */
+        .step-content { display: none; }
+        .step-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+        
+        @media (max-width: 768px) {
+            #therapyTable thead { display: none; }
+            #therapyTable tbody tr { 
+                display: block; 
+                margin-bottom: 1rem; 
+                padding: 1rem; 
+                background: white; 
+                border: 1px solid #e5e7eb; 
+                border-radius: 1rem;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            }
+            #therapyTable td { 
+                display: block; 
+                padding: 0.5rem 0 !important;
+                border: none !important;
+            }
+            #therapyTable td::before {
+                content: attr(data-label);
+                display: block;
+                font-size: 0.65rem;
+                font-weight: 800;
+                color: #6b7280;
+                text-transform: uppercase;
+                margin-bottom: 0.25rem;
+            }
+            .suggestions-list { width: 100% !important; left: 0 !important; }
+        }
+
+        .bottom-nav-item.active { color: #628141; }
+        .bottom-nav-item.active svg { transform: translateY(-4px); color: #628141; }
     </style>
 </head>
-<body class="bg-gray-50 font-sans text-gray-900">
+<body class="bg-gray-50 font-sans text-gray-900 pb-20 md:pb-0">
 
     <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
+        <!-- Sidebar (Desktop) -->
         <aside id="sidebar" class="bg-primary text-gray-300 w-64 flex-shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 flex flex-col shadow-2xl">
             <div class="h-20 flex items-center justify-center border-b border-gray-800/50 bg-primary/50 backdrop-blur-sm">
                 <h1 class="text-2xl font-bold tracking-widest text-quaternary flex items-center gap-3">
@@ -40,33 +85,53 @@
                 </h1>
             </div>
             <nav class="flex-1 px-4 py-8 space-y-2 overflow-y-auto no-scrollbar">
-                <a href="registration.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📝</span><span class="font-medium tracking-wide">Registration</span>
+                <a href="registration.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group bg-secondary text-white shadow-lg border-l-4 border-quaternary">
+                    <span class="text-xl mr-3">📝</span><span class="font-medium tracking-wide">Registration</span>
                 </a>
                 <a href="assigned.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📅</span><span class="font-medium tracking-wide">Assigned</span>
+                    <span class="text-xl mr-3 opacity-70">📅</span><span class="font-medium tracking-wide">Assigned</span>
                 </a>
                 <a href="reminders.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">🔔</span><span class="font-medium tracking-wide">Reminders</span>
+                    <span class="text-xl mr-3 opacity-70">🔔</span><span class="font-medium tracking-wide">Reminders</span>
                 </a>
                 <a href="statistics.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">📊</span><span class="font-medium tracking-wide">Statistics</span>
+                    <span class="text-xl mr-3 opacity-70">📊</span><span class="font-medium tracking-wide">Statistics</span>
                 </a>
                 <a href="inactive.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">⚠️</span><span class="font-medium tracking-wide">Inactive</span>
+                    <span class="text-xl mr-3 opacity-70">⚠️</span><span class="font-medium tracking-wide">Inactive</span>
                 </a>
                 <a href="alerts.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">🚨</span><span class="font-medium tracking-wide">Alerts</span>
+                    <span class="text-xl mr-3 opacity-70">🚨</span><span class="font-medium tracking-wide">Alerts</span>
                 </a>
                 <div class="my-4 border-t border-gray-800/50"></div>
                 <a href="admin_dashboard.html" class="nav-link flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 hover:bg-white/5 hover:text-white group">
-                    <span class="text-xl mr-3 opacity-70 group-hover:opacity-100 transition-opacity">⚙️</span><span class="font-medium tracking-wide">Admin</span>
+                    <span class="text-xl mr-3 opacity-70">⚙️</span><span class="font-medium tracking-wide">Admin</span>
                 </a>
             </nav>
             <div class="p-6 border-t border-gray-800/50">
                 <button onclick="logout()" class="w-full flex items-center justify-center px-4 py-3 bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white rounded-xl transition-all duration-200 text-sm font-semibold tracking-wide border border-transparent hover:border-red-500 shadow-sm">Sign Out</button>
             </div>
         </aside>
+
+        <!-- Mobile Bottom Nav -->
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-[60] shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+            <a href="registration.html" class="bottom-nav-item active flex flex-col items-center gap-1 transition-all">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Reg</span>
+            </a>
+            <a href="assigned.html" class="bottom-nav-item flex flex-col items-center gap-1 text-gray-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Plan</span>
+            </a>
+            <a href="statistics.html" class="bottom-nav-item flex flex-col items-center gap-1 text-gray-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Stats</span>
+            </a>
+            <a href="alerts.html" class="bottom-nav-item flex flex-col items-center gap-1 text-gray-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Alerts</span>
+            </a>
+        </nav>
 
         <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-primary/80 backdrop-blur-sm z-40 hidden md:hidden transition-opacity"></div>
 
@@ -81,106 +146,205 @@
                         <h2 class="text-2xl font-bold text-gray-800 tracking-tight" id="page-title">New Patient Registration</h2>
                     </div>
                 </div>
+                
+                <div class="hidden md:flex items-center gap-6">
+                    <button id="headerSubmitBtn" form="medMitraForm" type="submit" class="hidden items-center gap-2 bg-secondary text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-primary transition-all transform hover:scale-105 active:scale-95">
+                        <span>🚀</span> Register & Generate QR
+                    </button>
+                    <div id="user-profile" class="flex items-center gap-3 border-l border-gray-200 pl-6">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-4 md:p-10 space-y-8 scroll-smooth">
+            <main class="flex-1 overflow-y-auto p-4 md:p-10 space-y-8 scroll-smooth relative">
                 <div class="max-w-5xl mx-auto">
-                    <form id="medMitraForm" class="space-y-8">
-                        <!-- Patient Details -->
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 relative group hover:shadow-md transition-shadow">
-                            <div class="absolute top-0 left-0 w-1.5 h-full bg-secondary"></div>
-                            <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                                <span class="bg-secondary/10 p-2 rounded-lg text-secondary">👤</span> Patient Details
-                            </h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">OPD Number</label>
-                                    <input type="text" id="opdNo" required class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all">
-                                </div>
-                                <div>
-                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Full Name</label>
-                                    <input type="text" id="patientName" required class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all">
-                                </div>
-                                <div>
-                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Contact Number</label>
-                                    <input type="text" id="contactNumber" required class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all">
-                                </div>
-                                <div>
-                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Reminder Language</label>
-                                    <select id="language" class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all appearance-none">
-                                        <option value="en">English</option>
-                                        <option value="hi">Hindi</option>
-                                        <option value="gu">Gujarati</option>
-                                        <option value="bn">Bengali</option>
-                                    </select>
+                    <!-- Wizard Progress -->
+                    <div class="mb-10 px-4">
+                        <div class="flex items-center justify-between relative">
+                            <div class="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -translate-y-1/2 z-0"></div>
+                            <div id="progress-line" class="absolute top-1/2 left-0 w-0 h-0.5 bg-secondary -translate-y-1/2 z-0 transition-all duration-500"></div>
+                            
+                            <div class="step-indicator active relative z-10 flex flex-col items-center gap-2" data-step="1">
+                                <div class="w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center font-bold ring-4 ring-white shadow-md">1</div>
+                                <span class="text-[10px] font-bold uppercase text-gray-400 hidden sm:block">Patient</span>
+                            </div>
+                            <div class="step-indicator relative z-10 flex flex-col items-center gap-2" data-step="2">
+                                <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold ring-4 ring-white shadow-md transition-colors">2</div>
+                                <span class="text-[10px] font-bold uppercase text-gray-400 hidden sm:block">Clinical</span>
+                            </div>
+                            <div class="step-indicator relative z-10 flex flex-col items-center gap-2" data-step="3">
+                                <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold ring-4 ring-white shadow-md transition-colors">3</div>
+                                <span class="text-[10px] font-bold uppercase text-gray-400 hidden sm:block">Therapy</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="medMitraForm" class="space-y-8 pb-32">
+                        <!-- Step 1: Patient Details -->
+                        <div id="step-1" class="step-content active">
+                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 relative group hover:shadow-md transition-shadow">
+                                <div class="absolute top-0 left-0 w-1.5 h-full bg-secondary"></div>
+                                <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                    <span class="bg-secondary/10 p-2 rounded-lg text-secondary">👤</span> Patient Details
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">OPD Number</label>
+                                        <input type="text" id="opdNo" required class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all" placeholder="Enter OPD#">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Full Name</label>
+                                        <input type="text" id="patientName" required class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all" placeholder="Patient Name">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Contact Number</label>
+                                        <input type="tel" id="contactNumber" required class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all" placeholder="+91">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Age</label>
+                                        <div class="flex gap-2">
+                                            <input type="number" id="ageValue" required class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all" placeholder="Value">
+                                            <select id="ageUnit" class="w-28 px-2 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all">
+                                                <option value="year">Years</option>
+                                                <option value="month">Months</option>
+                                                <option value="day">Days</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Gender</label>
+                                        <select id="gender" required class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all appearance-none">
+                                            <option value="">Select Gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Reminder Language</label>
+                                        <select id="language" class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all appearance-none">
+                                            <option value="en">English</option>
+                                            <option value="hi">Hindi</option>
+                                            <option value="gu">Gujarati</option>
+                                            <option value="bn">Bengali</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Clinical Info -->
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 relative group">
-                             <div class="absolute top-0 left-0 w-1.5 h-full bg-quaternary"></div>
-                             <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">🩺 Clinical Info</h3>
-                             
-                             <!-- Chief Complaints -->
-                             <div class="mb-8">
-                                <div class="flex justify-between items-center mb-4">
-                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Chief Complaints</label>
-                                    <button type="button" onclick="addClinicalRow('complaints-container', 'complaint')" class="text-xs font-bold text-secondary hover:text-primary transition-colors">+ Add Complaint</button>
+                        <!-- Step 2: Clinical Info -->
+                        <div id="step-2" class="step-content">
+                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 relative group">
+                                <div class="absolute top-0 left-0 w-1.5 h-full bg-quaternary"></div>
+                                <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">🩺 Clinical Info</h3>
+                                
+                                <div class="mb-8">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Chief Complaints</label>
+                                        <button type="button" onclick="addClinicalRow('complaints-container', 'complaint')" class="text-xs font-bold text-secondary hover:text-primary transition-colors">+ Add Complaint</button>
+                                    </div>
+                                    <div id="complaints-container" class="space-y-3"></div>
                                 </div>
-                                <div id="complaints-container" class="space-y-3">
-                                    <!-- Dynamic Rows -->
-                                </div>
-                             </div>
 
-                             <!-- Confirmed Diagnosis -->
-                             <div>
-                                <div class="flex justify-between items-center mb-4">
-                                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Confirmed Diagnoses</label>
-                                    <button type="button" onclick="addClinicalRow('diagnosis-container', 'diagnosis')" class="text-xs font-bold text-secondary hover:text-primary transition-colors">+ Add Diagnosis</button>
+                                <div>
+                                    <div class="flex justify-between items-center mb-4">
+                                        <div class="flex items-center gap-4">
+                                            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Confirmed Diagnoses</label>
+                                            <label class="flex items-center gap-2 cursor-pointer group">
+                                                <input type="checkbox" id="naDiagnosis" class="w-4 h-4 text-secondary rounded border-gray-300 focus:ring-secondary/20 transition-all">
+                                                <span class="text-xs font-medium text-gray-400 group-hover:text-secondary transition-colors uppercase tracking-tight">Not Applicable</span>
+                                            </label>
+                                        </div>
+                                        <button type="button" id="addDiagnosisBtn" onclick="addClinicalRow('diagnosis-container', 'diagnosis')" class="text-xs font-bold text-secondary hover:text-primary transition-colors disabled:opacity-30">+ Add Diagnosis</button>
+                                    </div>
+                                    <div id="diagnosis-container" class="space-y-3"></div>
                                 </div>
-                                <div id="diagnosis-container" class="space-y-3">
-                                    <!-- Dynamic Rows -->
-                                </div>
-                             </div>
-                        </div>
-
-                        <!-- Therapy -->
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 relative group overflow-visible">
-                             <div class="absolute top-0 left-0 w-1.5 h-full bg-tertiary"></div>
-                             <div class="flex justify-between items-center mb-6">
-                                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">💊 Therapy Regimen</h3>
-                                <button type="button" onclick="addTherapyRow()" class="px-4 py-2 bg-secondary/10 text-secondary border border-secondary/20 rounded-lg text-sm font-bold transition-all">+ Add Drug</button>
-                            </div>
-                            <div class="overflow-x-auto rounded-xl border border-gray-200">
-                                <table id="therapyTable" class="w-full text-left border-collapse min-w-[700px]">
-                                    <thead>
-                                        <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-semibold border-b border-gray-200">
-                                            <th class="px-5 py-4">Drug Name</th>
-                                            <th class="px-5 py-4">Dose</th>
-                                            <th class="px-5 py-4">Schedule</th>
-                                            <th class="px-5 py-4">End Date</th>
-                                            <th class="px-5 py-4 text-center">Safety</th>
-                                            <th class="px-5 py-4 text-center">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100 bg-white"></tbody>
-                                </table>
                             </div>
                         </div>
 
-                        <button type="submit" class="w-full bg-primary text-quaternary font-bold py-4 rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-0.5 tracking-wide text-lg">Generate QR & Register</button>
+                        <!-- Step 3: Therapy -->
+                        <div id="step-3" class="step-content">
+                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 relative group overflow-visible">
+                                <div class="absolute top-0 left-0 w-1.5 h-full bg-tertiary"></div>
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">💊 Therapy Regimen</h3>
+                                    <button type="button" onclick="addTherapyRow()" class="px-4 py-2 bg-secondary/10 text-secondary border border-secondary/20 rounded-lg text-sm font-bold transition-all">+ Add Drug</button>
+                                </div>
+                                <div class="overflow-visible rounded-xl border border-gray-100 md:border-gray-200">
+                                    <table id="therapyTable" class="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-semibold border-b border-gray-200">
+                                                <th class="px-5 py-4">Drug Name</th>
+                                                <th class="px-5 py-4 w-48">Dose</th>
+                                                <th class="px-5 py-4 w-48">Schedule</th>
+                                                <th class="px-5 py-4 w-48">End Date</th>
+                                                <th class="px-5 py-4 text-center">Safety</th>
+                                                <th class="px-5 py-4 text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-100 bg-white"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Wizard Navigation -->
+                        <div class="fixed bottom-20 md:bottom-8 left-0 md:left-auto right-0 md:right-8 p-4 md:p-0 flex justify-between md:justify-end gap-4 z-40 bg-gray-50/80 md:bg-transparent backdrop-blur-md md:backdrop-blur-none">
+                            <button type="button" id="prevBtn" onclick="changeStep(-1)" class="hidden px-8 py-3.5 bg-white text-gray-600 border border-gray-200 rounded-xl font-bold shadow-sm hover:bg-gray-50 transition-all active:scale-95">
+                                ← Back
+                            </button>
+                            <button type="button" id="nextBtn" onclick="changeStep(1)" class="w-full md:w-auto px-10 py-3.5 bg-primary text-quaternary rounded-xl font-bold shadow-lg hover:bg-black transition-all transform active:scale-95">
+                                Next Step →
+                            </button>
+                            <button type="submit" id="submitBtn" class="hidden w-full md:w-auto px-10 py-3.5 bg-secondary text-white rounded-xl font-bold shadow-lg hover:bg-primary transition-all transform active:scale-95">
+                                🚀 Register Patient
+                            </button>
+                        </div>
                     </form>
 
                     <div id="message" class="hidden mt-8 p-6 rounded-xl text-center text-sm font-bold border fade-in"></div>
-
-                    <div id="qr-container" class="hidden mt-10 text-center bg-white p-10 rounded-3xl border border-gray-100 shadow-xl fade-in relative overflow-hidden">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Scan to Activate</h3>
-                        <div class="flex justify-center mb-8"><div id="qrcode" class="p-6 bg-white rounded-2xl shadow-lg border border-gray-100 relative z-10"></div></div>
-                        <div id="status-text" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary font-bold animate-pulse">Waiting for patient consent...</div>
-                    </div>
                 </div>
             </main>
+        </div>
+
+        <!-- Smart QR Overlay -->
+        <div id="qr-overlay" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 glass-overlay transition-opacity duration-300">
+            <div class="qr-card max-w-md w-full rounded-3xl p-8 text-center animate-[fadeIn_0.4s_ease-out]">
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-1">Scan to Activate</h3>
+                    <p class="text-sm text-gray-500">Ask the patient to scan this with Telegram</p>
+                </div>
+                
+                <div class="flex justify-center mb-8">
+                    <div id="qrcode" class="p-6 bg-white rounded-2xl shadow-inner border border-gray-100"></div>
+                </div>
+                
+                <div id="status-container" class="mb-8">
+                    <div id="status-text" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-secondary/10 text-secondary font-bold animate-pulse">
+                        <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                        Waiting for consent...
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <button onclick="closeQROverlay()" class="w-full py-3.5 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition-colors">
+                        ← Go Back & Edit Form
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Success Feedback (Briefly show after consent) -->
+        <div id="success-feedback" class="fixed inset-0 z-[110] hidden items-center justify-center glass-overlay">
+            <div class="text-center animate-bounce">
+                <div class="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Registration Complete!</h2>
+                <p class="text-gray-300 mt-2">Preparing for next patient...</p>
+            </div>
         </div>
     <div id="safety-modal" class="fixed inset-0 z-[60] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity" onclick="document.getElementById('safety-modal').classList.add('hidden')"></div>
@@ -226,6 +390,85 @@
         function getAuthHeaders() {
             const token = localStorage.getItem('auth_token');
             return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
+
+        /* --- Wizard Logic --- */
+        let currentStep = 1;
+        function changeStep(delta) {
+            const nextStep = currentStep + delta;
+            if (nextStep < 1 || nextStep > 3) return;
+            
+            // Validate current step before proceeding
+            if (delta > 0 && !validateStep(currentStep)) {
+                alert('Please fill all required fields in this step.');
+                return;
+            }
+
+            // Update UI
+            document.getElementById(`step-${currentStep}`).classList.remove('active');
+            document.getElementById(`step-${nextStep}`).classList.add('active');
+            
+            currentStep = nextStep;
+            updateProgress();
+            
+            // Scroll to top of form
+            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function validateStep(step) {
+            const container = document.getElementById(`step-${step}`);
+            const inputs = container.querySelectorAll('input[required]');
+            let valid = true;
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                    valid = false;
+                } else {
+                    input.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+                }
+            });
+            return valid;
+        }
+
+        function updateProgress() {
+            const indicators = document.querySelectorAll('.step-indicator');
+            const progressLine = document.getElementById('progress-line');
+            
+            indicators.forEach(ind => {
+                const step = parseInt(ind.dataset.step);
+                const circle = ind.querySelector('div');
+                const label = ind.querySelector('span');
+                
+                if (step <= currentStep) {
+                    circle.classList.remove('bg-gray-200', 'text-gray-500');
+                    circle.classList.add('bg-secondary', 'text-white');
+                    if (label) label.classList.add('text-secondary');
+                } else {
+                    circle.classList.add('bg-gray-200', 'text-gray-500');
+                    circle.classList.remove('bg-secondary', 'text-white');
+                    if (label) label.classList.remove('text-secondary');
+                }
+            });
+            
+            progressLine.style.width = `${((currentStep - 1) / 2) * 100}%`;
+            
+            // Navigation Buttons
+            document.getElementById('prevBtn').classList.toggle('hidden', currentStep === 1);
+            document.getElementById('nextBtn').classList.toggle('hidden', currentStep === 3);
+            
+            // Submit Buttons (Header and Wizard)
+            const submitBtn = document.getElementById('submitBtn');
+            const headerBtn = document.getElementById('headerSubmitBtn');
+            
+            if (currentStep === 3) {
+                submitBtn.classList.remove('hidden');
+                headerBtn.classList.remove('hidden');
+                headerBtn.classList.add('flex');
+            } else {
+                submitBtn.classList.add('hidden');
+                headerBtn.classList.add('hidden');
+                headerBtn.classList.remove('flex');
+            }
         }
 
         /* --- Application Logic --- */
@@ -285,9 +528,13 @@
             if (data.length > 0) {
                 list.innerHTML = data.map(item => `
                     <li onclick="selectICD('${item.title.replace(/'/g, "\\'")}', '${item.code}', '${listId}', '${inputId}', '${codeId}')" 
-                        class="px-5 py-3 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-none">
-                        <div class="font-medium text-gray-800">${item.title}</div>
-                        <div class="text-[10px] text-secondary font-bold font-mono mt-0.5">${item.code}</div>
+                        class="px-5 py-3 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-none transition-colors">
+                        <div class="grid grid-cols-[1fr_auto] items-center gap-6">
+                            <div class="min-w-0">
+                                <div class="text-xs font-bold text-gray-800 leading-normal truncate break-words whitespace-normal">${item.title}</div>
+                                ${item.code ? `<div class="text-[10px] text-secondary font-bold font-mono mt-0.5">${item.code}</div>` : ''}
+                            </div>
+                        </div>
                     </li>
                 `).join('');
                 list.classList.remove('hidden');
@@ -300,22 +547,27 @@
             const container = document.getElementById(containerId);
             const id = clinicalRowCount++;
             const div = document.createElement('div');
+            const naEl = document.getElementById('naDiagnosis');
+            const isNA = (type === 'diagnosis' && naEl && naEl.checked);
+            
             div.className = "flex gap-3 relative animate-[fadeIn_0.2s_ease-out]";
             div.innerHTML = `
                 <div class="flex-1 relative">
                     <input type="text" id="input-${type}-${id}" 
                            placeholder="${type === 'complaint' ? 'Symptom...' : 'Diagnosis...'}" 
                            onkeyup="searchICD(this, 'list-${type}-${id}', 'code-${type}-${id}')" 
-                           autocomplete="off" required 
-                           class="clinical-title block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm transition-all">
+                           autocomplete="off" ${type === 'complaint' ? 'required' : ''} 
+                           ${isNA ? 'disabled' : ''}
+                           class="clinical-title block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm transition-all ${isNA ? 'bg-gray-100 opacity-50' : ''}">
                     <input type="hidden" class="clinical-code" id="code-${type}-${id}">
                     <ul id="list-${type}-${id}" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-1 shadow-2xl max-h-48 overflow-y-auto hidden"></ul>
                 </div>
                 <div class="w-32">
                     <input type="text" placeholder="Duration" 
-                           class="clinical-duration block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm transition-all">
+                           ${isNA ? 'disabled' : ''}
+                           class="clinical-duration block w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm transition-all ${isNA ? 'bg-gray-100 opacity-50' : ''}">
                 </div>
-                <button type="button" onclick="this.parentElement.remove()" class="text-gray-400 hover:text-red-500 p-2">
+                <button type="button" ${isNA ? 'disabled' : ''} onclick="this.parentElement.remove()" class="text-gray-400 hover:text-red-500 p-2 disabled:opacity-30">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"></path></svg>
                 </button>
             `;
@@ -326,6 +578,8 @@
         window.addEventListener('DOMContentLoaded', () => {
             addClinicalRow('complaints-container', 'complaint');
             addClinicalRow('diagnosis-container', 'diagnosis');
+            addTherapyRow();
+            updateProgress(); // Initial button state
         });
 
         const searchDrug = debounce(async (input, id) => {
@@ -351,7 +605,20 @@
 
                 const results = [...safeLocalData.map(d => ({ ...d, source: 'Formulary' })), ...safeGlobalData.filter(g => !safeLocalData.some(l => l.rxcui === g.rxcui)).map(d => ({ ...d, source: 'Global' }))].slice(0, 10);
                 if (results.length > 0) {
-                    list.innerHTML = results.map(d => `<li onclick="selectDrug(this, ${id}, '${d.drug_name}', '${d.rxcui}', '${d.brand_name || ''}')" class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-none flex justify-between items-center"><div class="text-sm"><b>${d.drug_name}</b><br><small>${d.brand_name}</small></div><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-md ${d.source === 'Formulary' ? 'bg-secondary/10 text-secondary' : 'bg-gray-100 text-gray-500'}">${d.source}</span></li>`).join('');
+                    list.innerHTML = results.map(d => `
+                        <li onclick="selectDrug(this, ${id}, '${d.drug_name}', '${d.rxcui}', '${d.brand_name || ''}')" 
+                            class="px-5 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-none transition-colors">
+                            <div class="grid grid-cols-[1fr_auto] items-center gap-6">
+                                <div class="min-w-0">
+                                    <div class="text-xs font-bold text-gray-800 leading-normal truncate break-words whitespace-normal">${d.drug_name}</div>
+                                    ${d.brand_name ? `<div class="text-[10px] text-gray-400 mt-1 leading-tight italic truncate">${d.brand_name}</div>` : ''}
+                                </div>
+                                <span class="text-[9px] uppercase font-bold px-2.5 py-1 rounded-lg self-center whitespace-nowrap shadow-sm ${d.source === 'Formulary' ? 'bg-secondary text-white' : 'bg-gray-100 text-gray-500 border border-gray-200'}">
+                                    ${d.source}
+                                </span>
+                            </div>
+                        </li>
+                    `).join('');
                     list.classList.remove('hidden');
                 } else { list.classList.add('hidden'); }
             } catch (e) { console.error(e); }
@@ -368,8 +635,59 @@
             const row = table.insertRow();
             const id = rowCount++;
             row.className = "hover:bg-gray-50/50 transition-colors group animate-[fadeIn_0.3s_ease-in-out]";
-            row.innerHTML = `<td class="px-5 py-3 relative align-top"><input type="text" placeholder="Drug..." onkeyup="searchDrug(this, ${id})" autocomplete="off" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"><ul id="suggestions-${id}" class="suggestions-list absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-1 shadow-2xl max-h-48 overflow-y-auto hidden left-0 ring-1 ring-black/5"></ul><input type="hidden" class="rxcui-hidden"></td><td class="px-5 py-3 align-top"><input list="doses-${id}" type="text" placeholder="500mg" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"><datalist id="doses-${id}"></datalist></td><td class="px-5 py-3 align-top"><input type="text" placeholder="09:00, 21:00" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"></td><td class="px-5 py-3 align-top"><input type="date" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm"></td><td class="px-5 py-3 text-center align-top pt-3"><button type="button" disabled class="text-gray-300 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50" onclick="showSafetyInfo(this)"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></button></td><td class="px-5 py-3 text-center align-top pt-4"><button type="button" onclick="this.closest('tr').remove()" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"></path></svg></button></td>`;
+            row.innerHTML = `
+                <td class="px-5 py-3 relative align-top" data-label="Drug Name">
+                    <input type="text" placeholder="Drug..." onkeyup="searchDrug(this, ${id})" autocomplete="off" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm">
+                    <ul id="suggestions-${id}" class="suggestions-list absolute z-50 w-[300%] -left-4 bg-white border border-gray-200 rounded-2xl mt-2 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] max-h-80 overflow-y-auto hidden ring-1 ring-black/5"></ul>
+                    <input type="hidden" class="rxcui-hidden">
+                </td>
+                <td class="px-5 py-3 align-top" data-label="Dose">
+                    <input list="doses-${id}" type="text" placeholder="500mg" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm">
+                    <datalist id="doses-${id}"></datalist>
+                </td>
+                <td class="px-5 py-3 align-top" data-label="Schedule">
+                    <input type="text" placeholder="09:00, 21:00" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm">
+                </td>
+                <td class="px-5 py-3 align-top" data-label="End Date">
+                    <input type="date" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary text-sm">
+                </td>
+                <td class="px-5 py-3 text-center align-top pt-3" data-label="Safety">
+                    <button type="button" disabled class="text-gray-300 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50" onclick="showSafetyInfo(this)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </button>
+                </td>
+                <td class="px-5 py-3 text-center align-top pt-4" data-label="Action">
+                    <button type="button" onclick="this.closest('tr').remove()" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"></path></svg>
+                    </button>
+                </td>
+            `;
         }
+
+        // N/A Diagnosis Logic
+        document.getElementById('naDiagnosis').addEventListener('change', function() {
+            const container = document.getElementById('diagnosis-container');
+            const addBtn = document.getElementById('addDiagnosisBtn');
+            const isChecked = this.checked;
+
+            addBtn.disabled = isChecked;
+            
+            Array.from(container.children).forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.disabled = isChecked;
+                    if (isChecked) {
+                        input.classList.add('bg-gray-100', 'opacity-50');
+                        input.removeAttribute('required');
+                    } else {
+                        input.classList.remove('bg-gray-100', 'opacity-50');
+                        if (input.classList.contains('clinical-title')) input.setAttribute('required', '');
+                    }
+                });
+                const deleteBtn = row.querySelector('button');
+                if (deleteBtn) deleteBtn.disabled = isChecked;
+            });
+        });
 
         async function selectDrug(li, id, name, rxcui, brand) {
             const row = li.closest('td');
@@ -503,52 +821,48 @@
             `;
         }
 
+        function closeQROverlay() {
+            const overlay = document.getElementById('qr-overlay');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex', 'opacity-0');
+                if (pollingInterval) clearInterval(pollingInterval);
+            }, 300);
+        }
+
         document.getElementById('medMitraForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const messageDiv = document.getElementById('message');
-            const qrContainer = document.getElementById('qr-container');
+            const qrOverlay = document.getElementById('qr-overlay');
             const qrCodeDiv = document.getElementById('qrcode');
             const statusText = document.getElementById('status-text');
+            const successFeedback = document.getElementById('success-feedback');
+            
             messageDiv.classList.add('hidden');
-            qrContainer.classList.add('hidden');
             qrCodeDiv.innerHTML = '';
             if (pollingInterval) clearInterval(pollingInterval);
-            const opdNo = document.getElementById('opdNo').value;
             
-            // Collect Clinical Info
-            const complaints = Array.from(document.getElementById('complaints-container').children).map(row => ({
-                title: row.querySelector('.clinical-title').value,
-                code: row.querySelector('.clinical-code').value,
-                duration: row.querySelector('.clinical-duration').value
-            })).filter(c => c.title);
-
-            const diagnoses = Array.from(document.getElementById('diagnosis-container').children).map(row => ({
-                title: row.querySelector('.clinical-title').value,
-                code: row.querySelector('.clinical-code').value,
-                duration: row.querySelector('.clinical-duration').value
-            })).filter(d => d.title);
-
-            const therapies = [];
-            const rows = document.getElementById('therapyTable').getElementsByTagName('tbody')[0].rows;
-            for (let i = 0; i < rows.length; i++) {
-                const inputs = rows[i].getElementsByTagName('input');
-                // inputs[0]=Drug, inputs[1]=HiddenRXCUI, inputs[2]=Dose, inputs[3]=Schedule, inputs[4]=Date
-                therapies.push({ 
-                    drug: inputs[0].value, 
-                    dose: inputs[2].value, 
-                    scheduleTimes: inputs[3].value.split(',').map(t => t.trim()), 
-                    endDate: inputs[4].value 
-                });
-            }
+            const opdNo = document.getElementById('opdNo').value;
+            const ageVal = parseInt(document.getElementById('ageValue').value) || 0;
+            const ageUnit = document.getElementById('ageUnit').value;
+            let finalAge = ageVal;
+            // Simplified conversion to years for INT storage
+            if (ageUnit === 'month') finalAge = 0; // Or handle as needed for INT schema
+            if (ageUnit === 'day') finalAge = 0;
+            
             const data = { 
                 opdNo, 
                 patientName: document.getElementById('patientName').value, 
                 contactNumber: document.getElementById('contactNumber').value, 
+                age: finalAge,
+                gender: document.getElementById('gender').value,
                 language: document.getElementById('language').value,
                 complaints,
                 diagnoses,
                 therapies 
             };
+
             try {
                 const res = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/register`, { 
                     method: 'POST', 
@@ -556,26 +870,73 @@
                     body: JSON.stringify(data), 
                     credentials: 'include' 
                 });
+
                 if (res.ok) {
-                    qrContainer.classList.remove('hidden');
-                    new QRCode(qrCodeDiv, { text: `https://t.me/${botUsername}?start=${opdNo}`, width: 180, height: 180 });
+                    // Show Overlay
+                    qrOverlay.classList.remove('hidden');
+                    qrOverlay.classList.add('flex');
+                    
+                    new QRCode(qrCodeDiv, { 
+                        text: `https://t.me/${botUsername}?start=${opdNo}`, 
+                        width: 200, 
+                        height: 200,
+                        colorDark: "#1B211A",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
                     pollingInterval = setInterval(async () => {
-                        const check = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/check-consent/${encodeURIComponent(opdNo)}`, { 
-                            credentials: 'include',
-                            headers: getAuthHeaders()
-                        });
-                        const checkData = await check.json();
-                        if (checkData.consent) {
-                            clearInterval(pollingInterval);
-                            statusText.innerHTML = "✅ Consent Verified!";
-                            statusText.className = "px-4 py-2 rounded-full bg-green-100 text-green-700 font-bold";
-                            document.getElementById('medMitraForm').reset();
-                        }
+                        try {
+                            const check = await fetch(`${CONFIG.API_BASE_URL}/api/medmitra/check-consent/${encodeURIComponent(opdNo)}`, { 
+                                credentials: 'include',
+                                headers: getAuthHeaders()
+                            });
+                            const checkData = await check.json();
+                            
+                            if (checkData.consent) {
+                                clearInterval(pollingInterval);
+                                
+                                // 1. Show Success Feedback
+                                successFeedback.classList.remove('hidden');
+                                successFeedback.classList.add('flex');
+                                
+                                // 2. Reset Form & UI
+                                setTimeout(() => {
+                                    document.getElementById('medMitraForm').reset();
+                                    document.getElementById('complaints-container').innerHTML = '';
+                                    document.getElementById('diagnosis-container').innerHTML = '';
+                                    document.getElementById('therapyTable').getElementsByTagName('tbody')[0].innerHTML = '';
+                                    
+                                    // Re-add initial rows
+                                    addClinicalRow('complaints-container', 'complaint');
+                                    addClinicalRow('diagnosis-container', 'diagnosis');
+                                    addTherapyRow();
+                                    
+                                    // Hide everything back to normal
+                                    currentStep = 1;
+                                    updateProgress();
+                                    document.querySelectorAll('.step-content').forEach(c => c.classList.remove('active'));
+                                    document.getElementById('step-1').classList.add('active');
+
+                                    closeQROverlay();
+                                    successFeedback.classList.add('opacity-0');
+                                    setTimeout(() => {
+                                        successFeedback.classList.add('hidden');
+                                        successFeedback.classList.remove('flex', 'opacity-0');
+                                    }, 500);
+                                }, 2000);
+                            }
+                        } catch (err) { console.error("Polling error:", err); }
                     }, 3000);
+                } else {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Registration failed');
                 }
-            } catch (error) { messageDiv.textContent = 'Error: ' + error.message; messageDiv.classList.remove('hidden'); }
+            } catch (error) { 
+                messageDiv.textContent = '⚠️ ' + error.message; 
+                messageDiv.className = 'mt-8 p-6 rounded-xl text-center text-sm font-bold border border-red-200 bg-red-50 text-red-700 fade-in';
+                messageDiv.classList.remove('hidden'); 
+            }
         });
-        addTherapyRow();
     </script>
 </body>
 </html>

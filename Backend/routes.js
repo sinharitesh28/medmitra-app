@@ -132,13 +132,13 @@ router.post('/register', async (req, res) => {
             // Clear old
             await db.query("DELETE FROM medmitra_reminders WHERE enrollment_id = ?", [eid]);
 
-            // Insert new
+            // Insert new with end_date
             const values = therapies.map(t => [
-                eid, t.drug, t.dose, JSON.stringify(t.scheduleTimes || [])
+                eid, t.drug, t.dose, JSON.stringify(t.scheduleTimes || []), t.endDate || null
             ]);
             
             if (values.length > 0) {
-                await db.query("INSERT INTO medmitra_reminders (enrollment_id, drug_name, dose_instruction, schedule_times) VALUES ?", [values]);
+                await db.query("INSERT INTO medmitra_reminders (enrollment_id, drug_name, dose_instruction, schedule_times, end_date) VALUES ?", [values]);
             }
         }
 
@@ -149,29 +149,88 @@ router.post('/register', async (req, res) => {
     }
 });
 
+// --- Patient Detail Profile ---
+router.get('/patient-profile/:opdNo', async (req, res) => {
+    const { opdNo } = req.params;
+    try {
+        // 1. Get Base Identity
+        const [patients] = await db.query(`
+            SELECT p.*, e.enrollment_id, e.registered_at, e.language, e.consent_status, e.last_interaction
+            FROM master_patient_index p
+            JOIN medmitra_enrollments e ON p.patient_id = e.patient_id
+            WHERE p.opd_no = ?
+        `, [opdNo]);
+
+        if (patients.length === 0) return res.status(404).json({ error: 'Patient not found' });
+        const patient = patients[0];
+        const eid = patient.enrollment_id;
+
+        // 2. Get Clinical Info (Complaints & Diagnosis)
+        const [complaints] = await db.query("SELECT title, icd_code, duration FROM medmitra_complaints WHERE enrollment_id = ?", [eid]);
+        const [diagnoses] = await db.query("SELECT title, icd_code, duration FROM medmitra_diagnoses WHERE enrollment_id = ?", [eid]);
+
+        // 3. Get Therapy Regimen
+        const [therapy] = await db.query("SELECT drug_name, dose_instruction, schedule_times, end_date FROM medmitra_reminders WHERE enrollment_id = ?", [eid]);
+
+        // 4. Get Interaction Logs (Last 50)
+        const [logs] = await db.query(`
+            SELECT created_at as sent_at, response, response_at, message_sent
+            FROM medmitra_logs
+            WHERE patient_id = ?
+            ORDER BY created_at DESC
+            LIMIT 50
+        `, [patient.patient_id]);
+
+        res.json({
+            identity: patient,
+            clinical: { complaints, diagnoses },
+            therapy: therapy,
+            logs: logs
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Failed to fetch patient profile' });
+    }
+});
+
 // 4. Stats
 router.get('/stats', async (req, res) => {
+    let { startDate, endDate } = req.query;
+    if (!startDate) {
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
+        startDate = d.toISOString().split('T')[0];
+        endDate = new Date().toISOString().split('T')[0];
+    }
     try {
         const [pats] = await db.query("SELECT COUNT(*) as total, SUM(consent_status) as active FROM medmitra_enrollments");
-        const [logs] = await db.query("SELECT response, COUNT(*) as count FROM medmitra_logs GROUP BY response");
         
-        // Registrations (Last 7 Days)
-        const [regs] = await db.query(`
+        let logQuery = "SELECT response, COUNT(*) as count FROM medmitra_logs";
+        let logParams = [];
+        if (startDate && endDate) {
+             logQuery += " WHERE created_at BETWEEN ? AND ?";
+             logParams.push(startDate + ' 00:00:00', endDate + ' 23:59:59');
+        }
+        logQuery += " GROUP BY response";
+        const [logs] = await db.query(logQuery, logParams);
+        
+        // Registrations
+        let regQuery = `
             SELECT DATE_FORMAT(registered_at, '%Y-%m-%d') as date, COUNT(*) as count 
             FROM medmitra_enrollments 
-            WHERE registered_at >= NOW() - INTERVAL 7 DAY 
-            GROUP BY date
-        `);
+            WHERE registered_at BETWEEN ? AND ?
+            GROUP BY date`;
+        const [regs] = await db.query(regQuery, [startDate + ' 00:00:00', endDate + ' 23:59:59']);
 
         // Recent Reactions
-        const [reacts] = await db.query(`
-            SELECT l.response_at, p.full_name as patient_name 
+        let reactQuery = `
+            SELECT l.response_at, p.full_name as patient_name, p.opd_no
             FROM medmitra_logs l 
             JOIN master_patient_index p ON l.patient_id = p.patient_id 
-            WHERE l.response = 'REACTION' 
-            ORDER BY l.response_at DESC 
-            LIMIT 5
-        `);
+            WHERE l.response = 'REACTION' AND l.response_at BETWEEN ? AND ?
+            ORDER BY l.response_at DESC LIMIT 5
+        `;
+        const [reacts] = await db.query(reactQuery, [startDate + ' 00:00:00', endDate + ' 23:59:59']);
 
         res.json({
             patients: { total: pats[0].total, active: pats[0].active },
@@ -187,14 +246,22 @@ router.get('/stats', async (req, res) => {
 
 // 5. Reaction Alerts
 router.get('/reaction-alerts', async (req, res) => {
+    let { startDate, endDate } = req.query;
+    if (!startDate) {
+        const d = new Date();
+        d.setHours(d.getHours() - 48);
+        startDate = d.toISOString().split('T')[0];
+        endDate = new Date().toISOString().split('T')[0];
+    }
     try {
-        const [rows] = await db.query(`
+        let query = `
             SELECT l.response_at, p.full_name as patient_name, p.opd_no, p.contact_number 
             FROM medmitra_logs l 
             JOIN master_patient_index p ON l.patient_id = p.patient_id 
-            WHERE l.response = 'REACTION' 
+            WHERE l.response = 'REACTION' AND l.response_at BETWEEN ? AND ?
             ORDER BY l.response_at DESC
-        `);
+        `;
+        const [rows] = await db.query(query, [startDate + ' 00:00:00', endDate + ' 23:59:59']);
         res.json(rows);
     } catch (e) {
         console.error(e);
@@ -204,21 +271,29 @@ router.get('/reaction-alerts', async (req, res) => {
 
 // 6. Inactive Patients
 router.get('/inactive-patients', async (req, res) => {
+    let { startDate, endDate } = req.query;
+    if (!startDate) {
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
+        startDate = d.toISOString().split('T')[0];
+        endDate = new Date().toISOString().split('T')[0];
+    }
     try {
-        // Patients unresponsive > 24h OR never active, AND missed >= 3 (FORGOT or SENT>24h?)
-        // Simplified: Last interaction > 24h ago AND has 'FORGOT' entries >= 3
+        let missedSubquery = "SELECT COUNT(*) FROM medmitra_logs l WHERE l.patient_id = p.patient_id AND l.response = 'FORGOT'";
+        missedSubquery += " AND l.created_at BETWEEN ? AND ?";
+
         const [rows] = await db.query(`
             SELECT 
                 p.full_name as patient_name, 
                 p.opd_no, 
                 p.contact_number, 
                 e.last_interaction,
-                (SELECT COUNT(*) FROM medmitra_logs l WHERE l.patient_id = p.patient_id AND l.response = 'FORGOT') as missed_count
+                (${missedSubquery}) as missed_count
             FROM medmitra_enrollments e
             JOIN master_patient_index p ON e.patient_id = p.patient_id
             WHERE (e.last_interaction < NOW() - INTERVAL 24 HOUR OR e.last_interaction IS NULL)
             HAVING missed_count >= 3
-        `);
+        `, [startDate + ' 00:00:00', endDate + ' 23:59:59']);
         res.json(rows);
     } catch (e) {
         console.error(e);
@@ -226,8 +301,20 @@ router.get('/inactive-patients', async (req, res) => {
     }
 });
 
-// 7. Assigned Reminders (Today's Schedule)
+// 7. Assigned Reminders (Treatment Timeline)
 router.get('/assigned-reminders', async (req, res) => {
+    let { startDate, endDate } = req.query;
+    const now = new Date();
+    
+    // Default: From Today to 7 days ahead
+    if (!startDate) {
+        startDate = now.toISOString().split('T')[0];
+        const d = new Date();
+        d.setDate(d.getDate() + 7);
+        endDate = d.toISOString().split('T')[0];
+    }
+    if (!endDate) endDate = startDate;
+
     try {
         const [rows] = await db.query(`
             SELECT 
@@ -235,49 +322,54 @@ router.get('/assigned-reminders', async (req, res) => {
                 p.opd_no, 
                 r.drug_name, 
                 r.dose_instruction as dose, 
-                r.schedule_times
+                r.schedule_times,
+                r.end_date
             FROM medmitra_reminders r
             JOIN medmitra_enrollments e ON r.enrollment_id = e.enrollment_id
             JOIN master_patient_index p ON e.patient_id = p.patient_id
-        `);
-
-        // Helper to check if a time is today (simplified: all reminders repeat daily)
-        // In a real app, schedule_times might have dates. Here it's just HH:MM strings.
-        // We'll return ALL daily reminders for "Today's View"
-        
-        const now = new Date();
-        const currentHours = now.getHours();
-        const currentMinutes = now.getMinutes();
-        const currentTimeVal = currentHours * 60 + currentMinutes;
+            WHERE (r.end_date >= ? OR r.end_date IS NULL)
+        `, [startDate]);
 
         const schedule = [];
-        rows.forEach(row => {
-            const times = row.schedule_times; // JSON Array of strings "HH:MM"
-            if (Array.isArray(times)) {
-                times.forEach(timeStr => {
-                    const [h, m] = timeStr.split(':').map(Number);
-                    const timeVal = h * 60 + m;
-                    
-                    let status = 'Upcoming';
-                    if (timeVal < currentTimeVal) status = 'Past';
+        const start = new Date(startDate);
+        const end = new Date(endDate);
 
-                    schedule.push({
-                        time: timeStr,
-                        patient_name: row.patient_name,
-                        opd_no: row.opd_no,
-                        drug_name: row.drug_name,
-                        dose: row.dose,
-                        status: status
+        // Iterate through each day in the range
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            const dateStr = d.toISOString().split('T')[0];
+            const isToday = dateStr === now.toISOString().split('T')[0];
+            const currentTimeVal = now.getHours() * 60 + now.getMinutes();
+
+            rows.forEach(row => {
+                // Skip if medication course ended before this date
+                if (row.end_date && new Date(row.end_date) < d) return;
+
+                const times = row.schedule_times;
+                if (Array.isArray(times)) {
+                    times.forEach(timeStr => {
+                        const [h, m] = timeStr.split(':').map(Number);
+                        const timeVal = h * 60 + m;
+                        
+                        let status = 'Upcoming';
+                        if (isToday && timeVal < currentTimeVal) status = 'Past';
+                        if (d < now && !isToday) status = 'Completed';
+
+                        schedule.push({
+                            date: dateStr,
+                            time: timeStr,
+                            patient_name: row.patient_name,
+                            opd_no: row.opd_no,
+                            drug_name: row.drug_name,
+                            dose: row.dose,
+                            status: status
+                        });
                     });
-                });
-            }
-        });
+                }
+            });
+        }
 
-        // Sort by time
-        schedule.sort((a, b) => {
-            return a.time.localeCompare(b.time);
-        });
-
+        // Sort by date then time
+        schedule.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
         res.json(schedule);
     } catch (e) {
         console.error(e);
@@ -287,18 +379,28 @@ router.get('/assigned-reminders', async (req, res) => {
 
 // 8. Logs (Reminders History)
 router.get('/logs', async (req, res) => {
+    let { startDate, endDate } = req.query;
+    if (!startDate) {
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
+        startDate = d.toISOString().split('T')[0];
+        endDate = new Date().toISOString().split('T')[0];
+    }
     try {
-        const [rows] = await db.query(`
+        let query = `
             SELECT 
                 l.created_at as sent_at,
                 l.response_at,
                 p.full_name as patient_name,
                 p.opd_no,
-                l.response
+                l.response,
+                l.message_sent
             FROM medmitra_logs l
             JOIN master_patient_index p ON l.patient_id = p.patient_id
+            WHERE l.created_at BETWEEN ? AND ?
             ORDER BY l.created_at DESC
-        `);
+        `;
+        const [rows] = await db.query(query, [startDate + ' 00:00:00', endDate + ' 23:59:59']);
         res.json(rows);
     } catch (e) {
         console.error(e);
