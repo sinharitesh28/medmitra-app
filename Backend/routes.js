@@ -64,6 +64,7 @@ router.get('/check-consent/:opdNo', async (req, res) => {
 // 3. Register / Enrollment
 router.post('/register', async (req, res) => {
     const { opdNo, ipNo, patientName, age, gender, contactNumber, therapies, language, complaints, diagnoses } = req.body;
+    console.log(`[Register] Received request for OPD: ${opdNo}, Name: ${patientName}`);
     
     try {
         // Upsert Master Index
@@ -71,10 +72,11 @@ router.post('/register', async (req, res) => {
             ipNo: ipNo || null,
             opdNo: opdNo, // Primary for MedMitra
             name: patientName,
-            age: age,
+            age: parseInt(age) || 0,
             gender: gender,
             contact: contactNumber
         });
+        console.log(`[Register] Patient Index upserted. ID: ${pid}`);
 
         // Create Enrollment with Language
         const [enrRes] = await db.query(`
@@ -85,9 +87,18 @@ router.post('/register', async (req, res) => {
 
         // Get Enrollment ID
         const [enr] = await db.query("SELECT enrollment_id FROM medmitra_enrollments WHERE patient_id = ?", [pid]);
+        if (enr.length === 0) throw new Error('Failed to create enrollment record');
         const eid = enr[0].enrollment_id;
+        console.log(`[Register] Enrollment record found. EID: ${eid}`);
 
-        // Ensure Clinical Tables Exist (Self-Healing)
+        // Ensure Clinical Tables & Columns Exist (Self-Healing)
+        await db.query(`ALTER TABLE medmitra_reminders ADD COLUMN IF NOT EXISTS end_date DATE`).catch(err => {
+            // Ignore error if column already exists or if syntax not supported (older MySQL)
+            // But we already checked version is 8.0+, though production TiDB might vary.
+            // Safe fallback:
+            if (!err.message.includes('Duplicate column name')) console.error("[DB Self-Heal] End Date Error:", err.message);
+        });
+
         await db.query(`
             CREATE TABLE IF NOT EXISTS medmitra_complaints (
                 complaint_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -128,24 +139,29 @@ router.post('/register', async (req, res) => {
         }
 
         // 3. Convert Therapies to Reminders
-        if (therapies && therapies.length > 0) {
+        if (therapies && Array.isArray(therapies) && therapies.length > 0) {
+            console.log(`[Register] Processing ${therapies.length} therapies`);
             // Clear old
             await db.query("DELETE FROM medmitra_reminders WHERE enrollment_id = ?", [eid]);
 
             // Insert new with end_date
-            const values = therapies.map(t => [
-                eid, t.drug, t.dose, JSON.stringify(t.scheduleTimes || []), t.endDate || null
-            ]);
+            const values = therapies.filter(t => t.drug).map(t => {
+                const times = Array.isArray(t.scheduleTimes) ? t.scheduleTimes : [];
+                return [
+                    eid, t.drug, t.dose || null, JSON.stringify(times), t.endDate || null
+                ];
+            });
             
             if (values.length > 0) {
                 await db.query("INSERT INTO medmitra_reminders (enrollment_id, drug_name, dose_instruction, schedule_times, end_date) VALUES ?", [values]);
             }
         }
 
+        console.log(`[Register] Success for OPD: ${opdNo}`);
         res.json({ success: true, message: 'Enrolled in MedMitra' });
     } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: 'Enrollment failed' });
+        console.error(`[Register] Error for OPD ${opdNo}:`, e);
+        res.status(500).json({ error: 'Enrollment failed: ' + e.message });
     }
 });
 
