@@ -92,12 +92,15 @@ router.post('/register', async (req, res) => {
         console.log(`[Register] Enrollment record found. EID: ${eid}`);
 
         // Ensure Clinical Tables & Columns Exist (Self-Healing)
-        await db.query(`ALTER TABLE medmitra_reminders ADD COLUMN IF NOT EXISTS end_date DATE`).catch(err => {
-            // Ignore error if column already exists or if syntax not supported (older MySQL)
-            // But we already checked version is 8.0+, though production TiDB might vary.
-            // Safe fallback:
-            if (!err.message.includes('Duplicate column name')) console.error("[DB Self-Heal] End Date Error:", err.message);
-        });
+        try {
+            const [cols] = await db.query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_NAME = 'medmitra_reminders' AND COLUMN_NAME = 'end_date' AND TABLE_SCHEMA = DATABASE()");
+            if (cols.length === 0) {
+                console.log("[DB Self-Heal] Adding end_date column...");
+                await db.query("ALTER TABLE medmitra_reminders ADD COLUMN end_date DATE");
+            }
+        } catch (err) {
+            console.error("[DB Self-Heal] End Date check/add failed:", err.message);
+        }
 
         await db.query(`
             CREATE TABLE IF NOT EXISTS medmitra_complaints (
@@ -144,16 +147,26 @@ router.post('/register', async (req, res) => {
             // Clear old
             await db.query("DELETE FROM medmitra_reminders WHERE enrollment_id = ?", [eid]);
 
-            // Insert new with end_date
-            const values = therapies.filter(t => t.drug).map(t => {
-                const times = Array.isArray(t.scheduleTimes) ? t.scheduleTimes : [];
-                return [
-                    eid, t.drug, t.dose || null, JSON.stringify(times), t.endDate || null
-                ];
-            });
-            
-            if (values.length > 0) {
-                await db.query("INSERT INTO medmitra_reminders (enrollment_id, drug_name, dose_instruction, schedule_times, end_date) VALUES ?", [values]);
+            // Insert new
+            try {
+                const values = therapies.filter(t => t.drug).map(t => {
+                    const times = Array.isArray(t.scheduleTimes) ? t.scheduleTimes : [];
+                    return [eid, t.drug, t.dose || null, JSON.stringify(times), t.endDate || null];
+                });
+                if (values.length > 0) {
+                    await db.query("INSERT INTO medmitra_reminders (enrollment_id, drug_name, dose_instruction, schedule_times, end_date) VALUES ?", [values]);
+                }
+            } catch (insertErr) {
+                if (insertErr.message.includes('Unknown column \'end_date\'')) {
+                    console.warn("[Register] Falling back: end_date column missing.");
+                    const fallbackValues = therapies.filter(t => t.drug).map(t => {
+                        const times = Array.isArray(t.scheduleTimes) ? t.scheduleTimes : [];
+                        return [eid, t.drug, t.dose || null, JSON.stringify(times)];
+                    });
+                    await db.query("INSERT INTO medmitra_reminders (enrollment_id, drug_name, dose_instruction, schedule_times) VALUES ?", [fallbackValues]);
+                } else {
+                    throw insertErr;
+                }
             }
         }
 
