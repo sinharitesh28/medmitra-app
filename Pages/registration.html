@@ -848,8 +848,35 @@
             const ageUnit = document.getElementById('ageUnit').value;
             let finalAge = ageVal;
             // Simplified conversion to years for INT storage
-            if (ageUnit === 'month') finalAge = 0; // Or handle as needed for INT schema
+            if (ageUnit === 'month') finalAge = 0; 
             if (ageUnit === 'day') finalAge = 0;
+
+            // Collect Clinical Info
+            const complaints = Array.from(document.getElementById('complaints-container').children).map(row => ({
+                title: row.querySelector('.clinical-title').value,
+                code: row.querySelector('.clinical-code').value,
+                duration: row.querySelector('.clinical-duration').value
+            })).filter(c => c.title);
+
+            const isDiagnosisNA = document.getElementById('naDiagnosis').checked;
+            const diagnoses = isDiagnosisNA ? [] : Array.from(document.getElementById('diagnosis-container').children).map(row => ({
+                title: row.querySelector('.clinical-title').value,
+                code: row.querySelector('.clinical-code').value,
+                duration: row.querySelector('.clinical-duration').value
+            })).filter(d => d.title);
+
+            const therapies = [];
+            const rows = document.getElementById('therapyTable').getElementsByTagName('tbody')[0].rows;
+            for (let i = 0; i < rows.length; i++) {
+                const inputs = rows[i].getElementsByTagName('input');
+                // inputs[0]=Drug, inputs[1]=HiddenRXCUI, inputs[2]=Dose, inputs[3]=Schedule, inputs[4]=Date
+                therapies.push({ 
+                    drug: inputs[0].value, 
+                    dose: inputs[2].value, 
+                    scheduleTimes: inputs[3].value.split(',').map(t => t.trim()), 
+                    endDate: inputs[4].value 
+                });
+            }
             
             const data = { 
                 opdNo, 
